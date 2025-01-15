@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -34,9 +35,9 @@ type AppService struct {
 }
 
 type IAppService interface {
-	PageApp(req request.AppSearch) (interface{}, error)
-	GetAppTags() ([]response.TagDTO, error)
-	GetApp(key string) (*response.AppDTO, error)
+	PageApp(ctx *gin.Context, req request.AppSearch) (interface{}, error)
+	GetAppTags(ctx *gin.Context) ([]response.TagDTO, error)
+	GetApp(ctx *gin.Context, key string) (*response.AppDTO, error)
 	GetAppDetail(appId uint, version, appType string) (response.AppDetailDTO, error)
 	Install(ctx context.Context, req request.AppInstallCreate) (*model.AppInstall, error)
 	SyncAppListFromRemote() error
@@ -50,7 +51,7 @@ func NewIAppService() IAppService {
 	return &AppService{}
 }
 
-func (a AppService) PageApp(req request.AppSearch) (interface{}, error) {
+func (a AppService) PageApp(ctx *gin.Context, req request.AppSearch) (interface{}, error) {
 	var opts []repo.DBOption
 	opts = append(opts, appRepo.OrderByRecommend())
 	if req.Name != "" {
@@ -89,23 +90,19 @@ func (a AppService) PageApp(req request.AppSearch) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var appDTOs []*response.AppDto
+	var appDTOs []*response.AppItem
+	lang := strings.ToLower(common.GetLang(ctx))
 	for _, ap := range apps {
-		ap.ReadMe = ""
-		ap.Website = ""
-		ap.Document = ""
-		ap.Github = ""
-		appDTO := &response.AppDto{
-			ID:          ap.ID,
-			Name:        ap.Name,
-			Key:         ap.Key,
-			Type:        ap.Type,
-			Icon:        ap.Icon,
-			ShortDescZh: ap.ShortDescZh,
-			ShortDescEn: ap.ShortDescEn,
-			Resource:    ap.Resource,
-			Limit:       ap.Limit,
+		appDTO := &response.AppItem{
+			ID:       ap.ID,
+			Name:     ap.Name,
+			Key:      ap.Key,
+			Type:     ap.Type,
+			Icon:     ap.Icon,
+			Resource: ap.Resource,
+			Limit:    ap.Limit,
 		}
+		appDTO.Description = ap.GetDescription(ctx)
 		appDTOs = append(appDTOs, appDTO)
 		appTags, err := appTagRepo.GetByAppId(ap.ID)
 		if err != nil {
@@ -119,7 +116,27 @@ func (a AppService) PageApp(req request.AppSearch) (interface{}, error) {
 		if err != nil {
 			continue
 		}
-		appDTO.Tags = tags
+		for _, t := range tags {
+			if t.Name != "" {
+				tagDTO := response.TagDTO{
+					ID:   t.ID,
+					Key:  t.Key,
+					Name: t.Name,
+				}
+				appDTO.Tags = append(appDTO.Tags, tagDTO)
+			} else {
+				var translations = make(map[string]string)
+				_ = json.Unmarshal([]byte(t.Translations), &translations)
+				if name, ok := translations[lang]; ok {
+					tagDTO := response.TagDTO{
+						ID:   t.ID,
+						Key:  t.Key,
+						Name: name,
+					}
+					appDTO.Tags = append(appDTO.Tags, tagDTO)
+				}
+			}
+		}
 		installs, _ := appInstallRepo.ListBy(appInstallRepo.WithAppId(ap.ID))
 		appDTO.Installed = len(installs) > 0
 	}
@@ -129,21 +146,26 @@ func (a AppService) PageApp(req request.AppSearch) (interface{}, error) {
 	return res, nil
 }
 
-func (a AppService) GetAppTags() ([]response.TagDTO, error) {
-	tags, err := tagRepo.All()
-	if err != nil {
-		return nil, err
-	}
-	var res []response.TagDTO
+func (a AppService) GetAppTags(ctx *gin.Context) ([]response.TagDTO, error) {
+	tags, _ := tagRepo.All()
+	res := make([]response.TagDTO, 0)
+	lang := strings.ToLower(common.GetLang(ctx))
 	for _, tag := range tags {
-		res = append(res, response.TagDTO{
-			Tag: tag,
-		})
+		tagDTO := response.TagDTO{
+			ID:  tag.ID,
+			Key: tag.Key,
+		}
+		var translations = make(map[string]string)
+		_ = json.Unmarshal([]byte(tag.Translations), &translations)
+		if name, ok := translations[lang]; ok {
+			tagDTO.Name = name
+		}
+		res = append(res, tagDTO)
 	}
 	return res, nil
 }
 
-func (a AppService) GetApp(key string) (*response.AppDTO, error) {
+func (a AppService) GetApp(ctx *gin.Context, key string) (*response.AppDTO, error) {
 	var appDTO response.AppDTO
 	if key == "postgres" {
 		key = "postgresql"
@@ -153,6 +175,7 @@ func (a AppService) GetApp(key string) (*response.AppDTO, error) {
 		return nil, err
 	}
 	appDTO.App = app
+	appDTO.App.Description = app.GetDescription(ctx)
 	details, err := appDetailRepo.GetBy(appDetailRepo.WithAppId(app.ID))
 	if err != nil {
 		return nil, err
@@ -188,7 +211,7 @@ func (a AppService) GetAppDetail(appID uint, version, appType string) (response.
 
 		versionPath := filepath.Join(app.GetAppResourcePath(), detail.Version)
 		if !fileOp.Stat(versionPath) || detail.Update {
-			if err = downloadApp(app, detail, nil); err != nil {
+			if err = downloadApp(app, detail, nil); err != nil && !fileOp.Stat(versionPath) {
 				return appDetailDTO, err
 			}
 		}
@@ -817,16 +840,28 @@ func (a AppService) SyncAppListFromRemote() (err error) {
 	settingService := NewISettingService()
 	_ = settingService.Update("AppStoreSyncStatus", constant.Syncing)
 
+	defer func() {
+		if err != nil {
+			_ = settingService.Update("AppStoreSyncStatus", constant.SyncFailed)
+			global.LOG.Errorf("App Store synchronization failed %v", err)
+		}
+	}()
+
+	setting, err := settingService.GetSettingInfo()
+	if err != nil {
+		return err
+	}
 	var (
 		tags      []*model.Tag
 		appTags   []*model.AppTag
 		oldAppIds []uint
 	)
 	for _, t := range list.Extra.Tags {
+		translations, _ := json.Marshal(t.Locales)
 		tags = append(tags, &model.Tag{
-			Key:  t.Key,
-			Name: t.Name,
-			Sort: t.Sort,
+			Key:          t.Key,
+			Translations: string(translations),
+			Sort:         t.Sort,
 		})
 	}
 	oldApps, err := appRepo.GetBy(appRepo.WithResource(constant.AppResourceRemote))
@@ -844,6 +879,12 @@ func (a AppService) SyncAppListFromRemote() (err error) {
 	global.LOG.Infof("Starting synchronization of application details...")
 	for _, l := range list.Apps {
 		app := appsMap[l.AppProperty.Key]
+
+		if l.AppProperty.Version > 0 && common.CompareVersion(strconv.FormatFloat(l.AppProperty.Version, 'f', -1, 64), setting.SystemVersion) {
+			delete(appsMap, l.AppProperty.Key)
+			continue
+		}
+
 		_, iconRes, err := httpUtil.HandleGetWithTransport(l.Icon, http.MethodGet, transport, constant.TimeOut20s)
 		if err != nil {
 			return err
@@ -868,7 +909,13 @@ func (a AppService) SyncAppListFromRemote() (err error) {
 			version := v.Name
 			detail := detailsMap[version]
 			versionUrl := fmt.Sprintf("%s/%s/%s", baseRemoteUrl, app.Key, version)
-
+			paramByte, _ := json.Marshal(v.AppForm)
+			var appForm dto.AppForm
+			_ = json.Unmarshal(paramByte, &appForm)
+			if appForm.SupportVersion > 0 && common.CompareVersion(strconv.FormatFloat(appForm.SupportVersion, 'f', -1, 64), setting.SystemVersion) {
+				delete(detailsMap, version)
+				continue
+			}
 			if _, ok := InitTypes[app.Type]; ok {
 				dockerComposeUrl := fmt.Sprintf("%s/%s", versionUrl, "docker-compose.yml")
 				_, composeRes, err := httpUtil.HandleGetWithTransport(dockerComposeUrl, http.MethodGet, transport, constant.TimeOut20s)
@@ -880,7 +927,6 @@ func (a AppService) SyncAppListFromRemote() (err error) {
 				detail.DockerCompose = ""
 			}
 
-			paramByte, _ := json.Marshal(v.AppForm)
 			detail.Params = string(paramByte)
 			detail.DownloadUrl = fmt.Sprintf("%s/%s", versionUrl, app.Key+"-"+version+".tar.gz")
 			detail.DownloadCallBackUrl = v.DownloadCallBackUrl

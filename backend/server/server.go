@@ -9,10 +9,12 @@ import (
 	"os"
 	"path"
 
+	"github.com/1Panel-dev/1Panel/backend/constant"
 	"github.com/1Panel-dev/1Panel/backend/i18n"
 
 	"github.com/1Panel-dev/1Panel/backend/init/app"
 	"github.com/1Panel-dev/1Panel/backend/init/business"
+	"github.com/1Panel-dev/1Panel/backend/init/lang"
 
 	"github.com/1Panel-dev/1Panel/backend/cron"
 	"github.com/1Panel-dev/1Panel/backend/init/cache"
@@ -38,11 +40,12 @@ func Start() {
 	db.Init()
 	migration.Init()
 	app.Init()
+	lang.Init()
 	validator.Init()
 	gob.Register(psession.SessionUser{})
 	cache.Init()
 	session.Init()
-	gin.SetMode("debug")
+	gin.SetMode(gin.DebugMode)
 	cron.Run()
 	InitOthers()
 	business.Init()
@@ -81,12 +84,16 @@ func Start() {
 		if err != nil {
 			panic(err)
 		}
+		constant.CertStore.Store(&cert)
+
 		server.TLSConfig = &tls.Config{
-			Certificates: []tls.Certificate{cert},
+			GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+				return constant.CertStore.Load().(*tls.Certificate), nil
+			},
 		}
 		global.LOG.Infof("listen at https://%s:%s [%s]", global.CONF.System.BindAddress, global.CONF.System.Port, tcpItem)
 
-		if err := server.ServeTLS(tcpKeepAliveListener{ln.(*net.TCPListener)}, certPath, keyPath); err != nil {
+		if err := server.ServeTLS(tcpKeepAliveListener{ln.(*net.TCPListener)}, "", ""); err != nil {
 			panic(err)
 		}
 	} else {

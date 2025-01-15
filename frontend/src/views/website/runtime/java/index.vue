@@ -5,18 +5,22 @@
             <template #prompt>
                 <el-alert type="info" :closable="false">
                     <template #title>
-                        <span v-html="$t('runtime.statusHelper')"></span>
+                        <span class="input-help whitespace-break-spaces">
+                            {{ $t('runtime.statusHelper') }}
+                        </span>
                     </template>
                 </el-alert>
             </template>
             <template #toolbar>
-                <el-button type="primary" @click="openCreate">
-                    {{ $t('runtime.create') }}
-                </el-button>
+                <div class="flex flex-wrap gap-3">
+                    <el-button type="primary" @click="openCreate">
+                        {{ $t('runtime.create') }}
+                    </el-button>
 
-                <el-button type="primary" plain @click="onOpenBuildCache()">
-                    {{ $t('container.cleanBuildCache') }}
-                </el-button>
+                    <el-button type="primary" plain @click="onOpenBuildCache()">
+                        {{ $t('container.cleanBuildCache') }}
+                    </el-button>
+                </div>
             </template>
             <template #main>
                 <ComplexTable :pagination-config="paginationConfig" :data="items" @search="search()">
@@ -33,7 +37,7 @@
                             </el-text>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('website.runDir')" prop="codeDir">
+                    <el-table-column :label="$t('website.runDir')" prop="codeDir" min-width="120px">
                         <template #default="{ row }">
                             <el-button type="primary" link @click="toFolder(row.codeDir)">
                                 <el-icon>
@@ -43,7 +47,7 @@
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('runtime.version')" prop="version"></el-table-column>
-                    <el-table-column :label="$t('runtime.externalPort')" prop="port">
+                    <el-table-column :label="$t('runtime.externalPort')" prop="port" min-width="120px">
                         <template #default="{ row }">
                             {{ row.port }}
                             <el-button link :icon="Promotion" @click="goDashboard(row.port, 'http')"></el-button>
@@ -67,7 +71,7 @@
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('commons.button.log')" prop="path">
+                    <el-table-column :label="$t('commons.button.log')" prop="path" min-width="120px">
                         <template #default="{ row }">
                             <el-button @click="openLog(row)" link type="primary">{{ $t('website.check') }}</el-button>
                         </template>
@@ -81,11 +85,11 @@
                         fix
                     />
                     <fu-table-operations
-                        :ellipsis="10"
-                        width="300px"
+                        :ellipsis="mobile ? 0 : 3"
+                        :min-width="mobile ? 'auto' : 300"
                         :buttons="buttons"
-                        :label="$t('commons.table.operate')"
                         fixed="right"
+                        :label="$t('commons.table.operate')"
                         fix
                     />
                 </ComplexTable>
@@ -100,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, computed } from 'vue';
 import { Runtime } from '@/api/interface/runtime';
 import { OperateRuntime, RuntimeDeleteCheck, SearchRuntimes, SyncRuntime } from '@/api/modules/runtime';
 import { dateFormat } from '@/utils/util';
@@ -117,6 +121,7 @@ import AppResources from '@/views/website/runtime/php/check/index.vue';
 import { ElMessageBox } from 'element-plus';
 import { containerPrune } from '@/api/modules/container';
 import { MsgSuccess } from '@/utils/message';
+import { GlobalStore } from '@/store';
 
 let timer: NodeJS.Timer | null = null;
 const loading = ref(false);
@@ -126,6 +131,11 @@ const deleteRef = ref();
 const dialogPortJumpRef = ref();
 const composeLogRef = ref();
 const checkRef = ref();
+
+const globalStore = GlobalStore();
+const mobile = computed(() => {
+    return globalStore.isMobile();
+});
 
 const paginationConfig = reactive({
     cacheSizeKey: 'runtime-page-size',

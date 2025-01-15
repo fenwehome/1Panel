@@ -1,25 +1,27 @@
 <template>
     <div>
-        <div class="app-status tool-status" v-if="data.isExist">
+        <div class="app-status" v-if="data.isExist">
             <el-card>
-                <div>
-                    <el-tag class="w-17" effect="dark" type="success">ClamAV</el-tag>
-                    <el-tag round class="status-content" v-if="data.isActive" type="success">
-                        {{ $t('commons.status.running') }}
-                    </el-tag>
-                    <el-tag round class="status-content" v-if="!data.isActive" type="info">
-                        {{ $t('commons.status.stopped') }}
-                    </el-tag>
-                    <el-tag class="status-content w-24">{{ $t('app.version') }}:{{ data.version }}</el-tag>
-                    <span class="buttons">
-                        <el-button type="primary" v-if="!data.isActive" link @click="onOperate('start')">
+                <div class="flex w-full flex-col gap-4 md:flex-row">
+                    <div class="flex flex-wrap gap-4">
+                        <el-tag effect="dark" type="success">ClamAV</el-tag>
+                        <el-tag round v-if="data.isActive" type="success">
+                            {{ $t('commons.status.running') }}
+                        </el-tag>
+                        <el-tag round v-if="!data.isActive" type="info">
+                            {{ $t('commons.status.stopped') }}
+                        </el-tag>
+                        <el-tag class="w-24">{{ $t('app.version') }}{{ $t('commons.colon') }}{{ data.version }}</el-tag>
+                    </div>
+                    <div class="mt-0.5">
+                        <el-button type="primary" v-if="!data.isActive" link @click="onOperate('ClamAV', 'start')">
                             {{ $t('app.start') }}
                         </el-button>
-                        <el-button type="primary" v-if="data.isActive" link @click="onOperate('stop')">
+                        <el-button type="primary" v-if="data.isActive" link @click="onOperate('ClamAV', 'stop')">
                             {{ $t('app.stop') }}
                         </el-button>
                         <el-divider direction="vertical" />
-                        <el-button type="primary" link @click="onOperate('restart')">
+                        <el-button type="primary" link @click="onOperate('ClamAV', 'restart')">
                             {{ $t('app.restart') }}
                         </el-button>
                         <el-divider direction="vertical" />
@@ -33,44 +35,56 @@
                         <el-button type="primary" v-if="!showFresh" link @click="changeShow(true)">
                             {{ $t('toolbox.clam.showFresh') }}
                         </el-button>
-                    </span>
+                    </div>
                 </div>
-                <div class="mt-4" v-if="showFresh">
-                    <el-tag class="w-16" effect="dark" type="success">FreshClam</el-tag>
-                    <el-tag round class="status-content" v-if="data.freshIsActive" type="success">
-                        {{ $t('commons.status.running') }}
-                    </el-tag>
-                    <el-tag round class="status-content" v-if="!data.freshIsActive" type="info">
-                        {{ $t('commons.status.stopped') }}
-                    </el-tag>
-                    <el-tag class="status-content w-24">{{ $t('app.version') }}:{{ data.freshVersion }}</el-tag>
-                    <span class="buttons">
-                        <el-button type="primary" v-if="!data.freshIsActive" link @click="onOperate('fresh-start')">
+                <div v-if="showFresh" class="flex w-full flex-col gap-4 md:flex-row mt-5">
+                    <div class="flex flex-wrap gap-4">
+                        <el-tag class="w-16" effect="dark" type="success">FreshClam</el-tag>
+                        <el-tag round v-if="data.freshIsActive" type="success">
+                            {{ $t('commons.status.running') }}
+                        </el-tag>
+                        <el-tag round v-if="!data.freshIsActive" type="info">
+                            {{ $t('commons.status.stopped') }}
+                        </el-tag>
+                        <el-tag class="w-24">{{ $t('app.version') }}:{{ data.freshVersion }}</el-tag>
+                    </div>
+                    <div class="mt-0.5">
+                        <el-button
+                            type="primary"
+                            v-if="!data.freshIsActive"
+                            link
+                            @click="onOperate('FreshClam', 'start')"
+                        >
                             {{ $t('app.start') }}
                         </el-button>
-                        <el-button type="primary" v-if="data.freshIsActive" link @click="onOperate('fresh-stop')">
+                        <el-button
+                            type="primary"
+                            v-if="data.freshIsActive"
+                            link
+                            @click="onOperate('FreshClam', 'stop')"
+                        >
                             {{ $t('app.stop') }}
                         </el-button>
                         <el-divider direction="vertical" />
-                        <el-button type="primary" link @click="onOperate('fresh-restart')">
+                        <el-button type="primary" link @click="onOperate('FreshClam', 'restart')">
                             {{ $t('app.restart') }}
                         </el-button>
-                    </span>
+                    </div>
                 </div>
             </el-card>
         </div>
         <LayoutContent :title="$t('toolbox.clam.clam')" :divider="true" v-if="!data.isExist" v-loading="loading">
             <template #main>
                 <div class="app-warn">
-                    <div>
+                    <div class="flex flex-col gap-2 items-center justify-center w-full sm:flex-row">
                         <span v-if="!data.isExist">{{ $t('toolbox.clam.noClam') }}</span>
-                        <span @click="toDoc()" v-if="!data.isExist">
-                            <el-icon class="ml-2"><Position /></el-icon>
+                        <span @click="toDoc()" v-if="!data.isExist" class="flex items-center justify-center gap-0.5">
+                            <el-icon><Position /></el-icon>
                             {{ $t('firewall.quickJump') }}
                         </span>
-                        <div>
-                            <img alt="" src="@/assets/images/no_app.svg" />
-                        </div>
+                    </div>
+                    <div>
+                        <img alt="" src="@/assets/images/no_app.svg" />
                     </div>
                 </div>
             </template>
@@ -83,6 +97,9 @@ import { onMounted, ref } from 'vue';
 import { ElMessageBox } from 'element-plus';
 import i18n from '@/lang';
 import { MsgSuccess } from '@/utils/message';
+import { GlobalStore } from '@/store';
+
+const globalStore = GlobalStore();
 
 const data = ref({
     isExist: false,
@@ -103,7 +120,7 @@ const setting = () => {
 };
 
 const toDoc = async () => {
-    window.open('https://1panel.cn/docs/user_manual/toolbox/clam/', '_blank', 'noopener,noreferrer');
+    window.open(globalStore.docsUrl + '/user_manual/toolbox/clam/', '_blank', 'noopener,noreferrer');
 };
 
 const changeShow = (val: boolean) => {
@@ -111,10 +128,10 @@ const changeShow = (val: boolean) => {
     localStorage.setItem('clam-fresh-show', showFresh.value ? 'show' : 'hide');
 };
 
-const onOperate = async (operation: string) => {
+const onOperate = async (service: string, operation: string) => {
     em('update:maskShow', false);
     ElMessageBox.confirm(
-        i18n.global.t('commons.msg.operatorHelper', [' ClamAV ', i18n.global.t('app.' + operation)]),
+        i18n.global.t('commons.msg.operatorHelper', [' ' + service + ' ', i18n.global.t('app.' + operation)]),
         i18n.global.t('app.' + operation),
         {
             confirmButtonText: i18n.global.t('commons.button.confirm'),
@@ -124,6 +141,9 @@ const onOperate = async (operation: string) => {
     )
         .then(() => {
             em('update:loading', true);
+            if (service === 'FreshClam') {
+                operation = 'fresh-' + operation;
+            }
             updateClamBaseInfo(operation)
                 .then(() => {
                     em('update:maskShow', true);

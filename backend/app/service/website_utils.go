@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/1Panel-dev/1Panel/backend/utils/xpack"
 	"log"
 	"os"
 	"path"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/1Panel-dev/1Panel/backend/utils/xpack"
 
 	"github.com/1Panel-dev/1Panel/backend/buserr"
 	"github.com/1Panel-dev/1Panel/backend/global"
@@ -276,7 +277,7 @@ func configDefaultNginx(website *model.Website, domains []model.WebsiteDomain, a
 				server.UpdateRoot(rootIndex)
 				server.UpdatePHPProxy([]string{website.Proxy}, "")
 			}
-		case constant.RuntimeNode, constant.RuntimeJava, constant.RuntimeGo:
+		case constant.RuntimeNode, constant.RuntimeJava, constant.RuntimeGo, constant.RuntimePython, constant.RuntimeDotNet:
 			proxy := fmt.Sprintf("http://127.0.0.1:%d", runtime.Port)
 			server.UpdateRootProxy([]string{proxy})
 		}
@@ -1010,9 +1011,11 @@ func GetSystemSSL() (bool, uint) {
 	if sslSetting.Value == "enable" {
 		sslID, _ := settingRepo.Get(settingRepo.WithByKey("SSLID"))
 		idValue, _ := strconv.Atoi(sslID.Value)
-		if idValue > 0 {
-			return true, uint(idValue)
+		if idValue <= 0 {
+			return false, 0
 		}
+
+		return true, uint(idValue)
 	}
 	return false, 0
 }
@@ -1033,19 +1036,7 @@ func UpdateSSLConfig(websiteSSL model.WebsiteSSL) error {
 			return buserr.WithErr(constant.ErrSSLApply, err)
 		}
 	}
-	enable, sslID := GetSystemSSL()
-	if enable && sslID == websiteSSL.ID {
-		fileOp := files.NewFileOp()
-		secretDir := path.Join(global.CONF.System.BaseDir, "1panel/secret")
-		if err := fileOp.WriteFile(path.Join(secretDir, "server.crt"), strings.NewReader(websiteSSL.Pem), 0600); err != nil {
-			global.LOG.Errorf("Failed to update the SSL certificate File for 1Panel System domain [%s] , err:%s", websiteSSL.PrimaryDomain, err.Error())
-			return err
-		}
-		if err := fileOp.WriteFile(path.Join(secretDir, "server.key"), strings.NewReader(websiteSSL.PrivateKey), 0600); err != nil {
-			global.LOG.Errorf("Failed to update the SSL certificate for 1Panel System domain [%s] , err:%s", websiteSSL.PrimaryDomain, err.Error())
-			return err
-		}
-	}
+	reloadSystemSSL(&websiteSSL, nil)
 	return nil
 }
 

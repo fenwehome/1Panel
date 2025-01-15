@@ -194,6 +194,8 @@ let icons = new Map([
     ['.zip', 'p-file-zip'],
     ['.gz', 'p-file-zip'],
     ['.tar.bz2', 'p-file-zip'],
+    ['.bz2', 'p-file-zip'],
+    ['.xz', 'p-file-zip'],
     ['.tar', 'p-file-zip'],
     ['.tar.gz', 'p-file-zip'],
     ['.war', 'p-file-zip'],
@@ -347,6 +349,19 @@ export function checkCidr(value: string): boolean {
         return false;
     }
 }
+export function checkCidrV6(value: string): boolean {
+    if (value === '') {
+        return true;
+    }
+    if (checkIpV6(value.split('/')[0])) {
+        return true;
+    }
+    const reg = /^(?:[1-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])$/;
+    if (!reg.test(value.split('/')[1])) {
+        return true;
+    }
+    return false;
+}
 
 export function checkPort(value: string): boolean {
     if (Number(value) <= 0) {
@@ -433,17 +448,17 @@ export function getAge(d1: string): string {
 
     let res = '';
     if (dayDiff > 0) {
-        res += String(dayDiff) + i18n.global.t('commons.units.day');
+        res += String(dayDiff) + i18n.global.t('commons.units.day', dayDiff);
         if (hours <= 0) {
             return res;
         }
     }
     if (hours > 0) {
-        res += String(hours) + i18n.global.t('commons.units.hour');
+        res += String(hours) + i18n.global.t('commons.units.hour', hours);
         return res;
     }
     if (minutes > 0) {
-        res += String(minutes) + i18n.global.t('commons.units.minute');
+        res += String(minutes) + i18n.global.t('commons.units.minute', minutes);
         return res;
     }
     return i18n.global.t('app.less1Minute');
@@ -556,7 +571,7 @@ export function emptyLineFilter(str: string, spilt: string) {
 // 文件类型映射
 let fileTypes = {
     image: ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.ico', '.svg', '.webp'],
-    compress: ['.zip', '.rar', '.gz', '.war', '.tgz', '.7z', '.tar.gz', '.tar'],
+    compress: ['.zip', '.rar', '.gz', '.war', '.tgz', '.7z', '.tar.gz', '.tar', '.bz2', '.xz', '.tar.bz2', '.tar.xz'],
     video: ['.mp4', '.webm', '.mov', '.wmv', '.mkv', '.avi', '.wma', '.flv'],
     audio: ['.mp3', '.wav', '.wma', '.ape', '.acc', '.ogg', '.flac'],
     pdf: ['.pdf'],
@@ -573,4 +588,30 @@ export const getFileType = (extension: string) => {
         }
     });
     return type;
+};
+
+export const escapeProxyURL = (url: string): string => {
+    const encodeMap: { [key: string]: string } = {
+        ':': '%%3A',
+        '/': '%%2F',
+        '?': '%%3F',
+        '#': '%%23',
+        '[': '%%5B',
+        ']': '%%5D',
+        '@': '%%40',
+        '!': '%%21',
+        $: '%%24',
+        '&': '%%26',
+        "'": '%%27',
+        '(': '%%28',
+        ')': '%%29',
+        '*': '%%2A',
+        '+': '%%2B',
+        ',': '%%2C',
+        ';': '%%3B',
+        '=': '%%3D',
+        '%': '%%25',
+    };
+
+    return url.replace(/[\/:?#[\]@!$&'()*+,;=%~]/g, (match) => encodeMap[match] || match);
 };

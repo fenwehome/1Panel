@@ -16,9 +16,9 @@ type Ufw struct {
 func NewUfw() (*Ufw, error) {
 	var ufw Ufw
 	if cmd.HasNoPasswordSudo() {
-		ufw.CmdStr = "sudo ufw"
+		ufw.CmdStr = "LANGUAGE=en_US:en sudo ufw"
 	} else {
-		ufw.CmdStr = "ufw"
+		ufw.CmdStr = "LANGUAGE=en_US:en ufw"
 	}
 	return &ufw, nil
 }
@@ -30,10 +30,6 @@ func (f *Ufw) Name() string {
 func (f *Ufw) Status() (string, error) {
 	stdout, _ := cmd.Execf("%s status | grep Status", f.CmdStr)
 	if stdout == "Status: active\n" {
-		return "running", nil
-	}
-	stdout1, _ := cmd.Execf("%s status | grep 状态", f.CmdStr)
-	if stdout1 == "状态： 激活\n" {
 		return "running", nil
 	}
 	return "not running", nil
@@ -104,10 +100,12 @@ func (f *Ufw) ListPort() ([]FireInfo, error) {
 }
 
 func (f *Ufw) ListForward() ([]FireInfo, error) {
+	_ = f.EnableForward()
 	iptables, err := NewIptables()
 	if err != nil {
 		return nil, err
 	}
+
 	rules, err := iptables.NatList()
 	if err != nil {
 		return nil, err
@@ -302,21 +300,34 @@ func (f *Ufw) EnableForward() error {
 	if err != nil {
 		return err
 	}
-	_ = iptables.NatNewChain()
 
+	if err = iptables.Check(); err != nil {
+		return err
+	}
+
+	_ = iptables.NewChain(NatTab, PreRoutingChain)
+	_ = iptables.NewChain(NatTab, PostRoutingChain)
+	_ = iptables.NewChain(FilterTab, ForwardChain)
+
+	if err = f.enableChain(iptables); err != nil {
+		return err
+	}
+	return iptables.Reload()
+}
+
+func (f *Ufw) enableChain(iptables *Iptables) error {
 	rules, err := iptables.NatList("PREROUTING")
 	if err != nil {
 		return err
 	}
 	for _, rule := range rules {
-		if rule.Target == NatChain {
-			goto reload
+		if rule.Target == PreRoutingChain {
+			return nil
 		}
 	}
 
-	if err = iptables.NatAppendChain(); err != nil {
-		return err
-	}
-reload:
-	return iptables.Reload()
+	_ = iptables.AppendChain(NatTab, "PREROUTING", PreRoutingChain)
+	_ = iptables.AppendChain(NatTab, "POSTROUTING", PostRoutingChain)
+	_ = iptables.AppendChain(FilterTab, "FORWARD", ForwardChain)
+	return nil
 }

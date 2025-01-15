@@ -20,7 +20,7 @@
                     </div>
                     <div class="description mb-4">
                         <span>
-                            {{ language == 'zh' || language == 'tw' ? app.shortDescZh : app.shortDescEn }}
+                            {{ app.description }}
                         </span>
                     </div>
                     <br />
@@ -84,12 +84,9 @@ import { ref } from 'vue';
 import Install from './install/index.vue';
 import router from '@/routers';
 import { GlobalStore } from '@/store';
-import { getLanguage } from '@/utils/util';
 import { storeToRefs } from 'pinia';
 const globalStore = GlobalStore();
 const { isDarkTheme } = storeToRefs(globalStore);
-
-const language = getLanguage();
 
 const app = ref<any>({});
 const appDetail = ref<any>({});
@@ -142,16 +139,12 @@ const toLink = (link: string) => {
 const openInstall = () => {
     switch (app.value.type) {
         case 'php':
-            router.push({ path: '/websites/runtimes/php' });
-            break;
         case 'node':
-            router.push({ path: '/websites/runtimes/node' });
-            break;
         case 'java':
-            router.push({ path: '/websites/runtimes/java' });
-            break;
         case 'go':
-            router.push({ path: '/websites/runtimes/go' });
+        case 'python':
+        case 'dotnet':
+            router.push({ path: '/websites/runtimes/' + app.value.type });
             break;
         default:
             const params = {
@@ -167,7 +160,7 @@ defineExpose({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .brief {
     .name {
         span {
@@ -188,6 +181,7 @@ defineExpose({
     .icon {
         width: 180px;
         height: 180px;
+        background-color: #ffffff;
     }
 
     .version {
@@ -200,5 +194,9 @@ defineExpose({
             margin-left: 20px;
         }
     }
+}
+
+:deep(.md-editor-dark) {
+    background-color: var(--panel-main-bg-color-9);
 }
 </style>

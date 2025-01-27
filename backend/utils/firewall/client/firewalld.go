@@ -8,6 +8,7 @@ import (
 
 	"github.com/1Panel-dev/1Panel/backend/buserr"
 	"github.com/1Panel-dev/1Panel/backend/constant"
+	"github.com/1Panel-dev/1Panel/backend/global"
 	"github.com/1Panel-dev/1Panel/backend/utils/cmd"
 )
 
@@ -24,7 +25,7 @@ func (f *Firewall) Name() string {
 }
 
 func (f *Firewall) Status() (string, error) {
-	stdout, _ := cmd.Exec("firewall-cmd --state")
+	stdout, _ := cmd.Exec("LANGUAGE=en_US:en firewall-cmd --state")
 	if stdout == "running\n" {
 		return "running", nil
 	}
@@ -32,7 +33,7 @@ func (f *Firewall) Status() (string, error) {
 }
 
 func (f *Firewall) Version() (string, error) {
-	stdout, err := cmd.Exec("firewall-cmd --version")
+	stdout, err := cmd.Exec("LANGUAGE=en_US:en firewall-cmd --version")
 	if err != nil {
 		return "", fmt.Errorf("load the firewall version failed, err: %s", stdout)
 	}
@@ -118,6 +119,9 @@ func (f *Firewall) ListPort() ([]FireInfo, error) {
 }
 
 func (f *Firewall) ListForward() ([]FireInfo, error) {
+	if err := f.EnableForward(); err != nil {
+		global.LOG.Errorf("init port forward failed, err: %v", err)
+	}
 	stdout, err := cmd.Exec("firewall-cmd --zone=public --list-forward-ports")
 	if err != nil {
 		return nil, err

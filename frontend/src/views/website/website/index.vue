@@ -3,12 +3,12 @@
         <RouterButton
             :buttons="[
                 {
-                    label: i18n.global.t('website.website'),
+                    label: i18n.global.t('website.website', 2),
                     path: '/websites',
                 },
             ]"
         />
-        <LayoutContent :title="$t('website.website')" v-loading="loading">
+        <LayoutContent :title="$t('website.website', 2)" v-loading="loading">
             <template #app>
                 <AppStatus
                     :app-key="'openresty'"
@@ -19,13 +19,16 @@
                 ></AppStatus>
             </template>
             <template v-if="nginxIsExist && !openNginxConfig" #toolbar>
-                <el-row :class="{ mask: nginxStatus != 'Running' }">
-                    <el-col :xs="24" :sm="20" :md="20" :lg="20" :xl="20">
+                <div
+                    class="flex justify-between gap-2 flex-wrap sm:flex-row"
+                    :class="{ mask: nginxStatus != 'Running' }"
+                >
+                    <div class="flex flex-wrap gap-3">
                         <el-button type="primary" @click="openCreate">
                             {{ $t('website.create') }}
                         </el-button>
                         <el-button type="primary" plain @click="openGroup">
-                            {{ $t('website.group') }}
+                            {{ $t('website.manageGroup') }}
                         </el-button>
                         <el-button type="primary" plain @click="openDefault">
                             {{ $t('website.defaultServer') }}
@@ -33,11 +36,10 @@
                         <el-button type="primary" plain @click="openDefaultHtml">
                             {{ $t('website.defaultHtml') }}
                         </el-button>
-                    </el-col>
-                    <el-col :xs="24" :sm="4" :md="4" :lg="4" :xl="4">
-                        <TableSearch @search="search()" v-model:searchName="req.name" />
-                    </el-col>
-                </el-row>
+                    </div>
+
+                    <TableSearch @search="search()" v-model:searchName="req.name" />
+                </div>
             </template>
             <template v-if="nginxIsExist && !openNginxConfig" #search>
                 <div :class="{ mask: nginxStatus != 'Running' }">
@@ -92,7 +94,7 @@
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('website.sitePath')" prop="sitePath">
+                    <el-table-column :label="$t('website.sitePath')" prop="sitePath" width="90px">
                         <template #default="{ row }">
                             <el-button type="primary" link @click="toFolder(row.sitePath + '/index')">
                                 <el-icon>
@@ -132,7 +134,7 @@
                         :label="$t('website.expireDate')"
                         prop="expireDate"
                         :sortable="'custom'"
-                        min-width="120px"
+                        min-width="150px"
                     >
                         <template #default="{ row }">
                             <div v-if="row.showdate">
@@ -163,7 +165,7 @@
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('website.sslExpireDate')" width="150px">
+                    <el-table-column :label="$t('website.sslExpireDate')" width="220px">
                         <template #default="{ row }">
                             <el-tag v-if="row.protocol == 'HTTPS'" :type="row.sslStatus">
                                 {{ dateFormatSimple(row.sslExpireDate) }}

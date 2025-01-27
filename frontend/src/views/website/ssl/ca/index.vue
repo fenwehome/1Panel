@@ -7,7 +7,7 @@
         @close="handleClose"
     >
         <template #header>
-            <DrawerHeader :header="$t('ssl.ca')" :back="handleClose" />
+            <DrawerHeader :header="$t('ssl.selfSigned')" :back="handleClose" />
         </template>
         <ComplexTable :data="data" :pagination-config="paginationConfig" @search="search()" v-loading="loading">
             <template #toolbar>
@@ -30,7 +30,7 @@
                 :buttons="buttons"
                 :label="$t('commons.table.operate')"
                 fix
-                width="250px"
+                width="400px"
             />
         </ComplexTable>
         <Create ref="createRef" @close="search()" />
@@ -127,7 +127,7 @@ const deleteCA = async (row: any) => {
         title: i18n.global.t('commons.button.delete'),
         names: [row.name],
         msg: i18n.global.t('commons.msg.operatorHelper', [
-            i18n.global.t('website.ca'),
+            i18n.global.t('ssl.ca'),
             i18n.global.t('commons.button.delete'),
         ]),
         api: DeleteCA,

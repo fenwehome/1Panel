@@ -179,6 +179,7 @@ func (u *FirewallService) OperateFirewall(operation string) error {
 	if err != nil {
 		return err
 	}
+	needRestartDocker := false
 	switch operation {
 	case "start":
 		if err := client.Start(); err != nil {
@@ -188,26 +189,30 @@ func (u *FirewallService) OperateFirewall(operation string) error {
 			_ = client.Stop()
 			return err
 		}
-		_, _ = cmd.Exec("systemctl restart docker")
-		return nil
+		needRestartDocker = true
 	case "stop":
 		if err := client.Stop(); err != nil {
 			return err
 		}
-		_, _ = cmd.Exec("systemctl restart docker")
-		return nil
+		needRestartDocker = true
 	case "restart":
 		if err := client.Restart(); err != nil {
 			return err
 		}
-		_, _ = cmd.Exec("systemctl restart docker")
-		return nil
+		needRestartDocker = true
 	case "disablePing":
 		return u.updatePingStatus("0")
 	case "enablePing":
 		return u.updatePingStatus("1")
+	default:
+		return fmt.Errorf("not supported operation: %s", operation)
 	}
-	return fmt.Errorf("not support such operation: %s", operation)
+	if needRestartDocker {
+		if err := restartDocker(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (u *FirewallService) OperatePortRule(req dto.PortRuleOperate, reload bool) error {
@@ -307,21 +312,58 @@ func (u *FirewallService) OperateForwardRule(req dto.ForwardRuleOperate) error {
 	}
 
 	rules, _ := client.ListForward()
+	i := 0
+	for _, rule := range rules {
+		shouldKeep := true
+		for i := range req.Rules {
+			reqRule := &req.Rules[i]
+			if reqRule.TargetIP == "" {
+				reqRule.TargetIP = "127.0.0.1"
+			}
+
+			if reqRule.Operation == "remove" {
+				for _, proto := range strings.Split(reqRule.Protocol, "/") {
+					if reqRule.Port == rule.Port &&
+						reqRule.TargetPort == rule.TargetPort &&
+						reqRule.TargetIP == rule.TargetIP &&
+						proto == rule.Protocol {
+						shouldKeep = false
+						break
+					}
+				}
+			}
+		}
+		if shouldKeep {
+			rules[i] = rule
+			i++
+		}
+	}
+	rules = rules[:i]
+
 	for _, rule := range rules {
 		for _, reqRule := range req.Rules {
 			if reqRule.Operation == "remove" {
 				continue
 			}
-			if reqRule.TargetIP == "" {
-				reqRule.TargetIP = "127.0.0.1"
-			}
-			if reqRule.Port == rule.Port && reqRule.TargetPort == rule.TargetPort && reqRule.TargetIP == rule.TargetIP {
-				return constant.ErrRecordExist
+
+			for _, proto := range strings.Split(reqRule.Protocol, "/") {
+				if reqRule.Port == rule.Port &&
+					reqRule.TargetPort == rule.TargetPort &&
+					reqRule.TargetIP == rule.TargetIP &&
+					proto == rule.Protocol {
+					return constant.ErrRecordExist
+				}
 			}
 		}
 	}
 
 	sort.SliceStable(req.Rules, func(i, j int) bool {
+		if req.Rules[i].Operation == "remove" && req.Rules[j].Operation != "remove" {
+			return true
+		}
+		if req.Rules[i].Operation != "remove" && req.Rules[j].Operation == "remove" {
+			return false
+		}
 		n1, _ := strconv.Atoi(req.Rules[i].Num)
 		n2, _ := strconv.Atoi(req.Rules[j].Num)
 		return n1 > n2
@@ -587,14 +629,6 @@ func (u *FirewallService) addPortsBeforeStart(client firewall.FirewallClient) er
 	}
 	if err := client.Port(fireClient.FireInfo{Port: "443", Protocol: "tcp", Strategy: "accept"}, "add"); err != nil {
 		return err
-	}
-	apps := u.loadPortByApp()
-	for _, app := range apps {
-		if len(app.HttpPort) != 0 && app.HttpPort != "0" {
-			if err := client.Port(fireClient.FireInfo{Port: app.HttpPort, Protocol: "tcp", Strategy: "accept"}, "add"); err != nil {
-				return err
-			}
-		}
 	}
 
 	return client.Reload()

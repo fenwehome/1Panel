@@ -76,16 +76,12 @@
                             {{ $t('runtime.javaDirHelper') }}
                         </span>
                     </el-form-item>
-                    <el-row :gutter="20">
-                        <el-col :span="18">
-                            <el-form-item :label="$t('runtime.runScript')" prop="params.EXEC_SCRIPT">
-                                <el-input v-model="runtime.params['EXEC_SCRIPT']"></el-input>
-                                <span class="input-help">
-                                    {{ $t('runtime.javaScriptHelper') }}
-                                </span>
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
+                    <el-form-item :label="$t('runtime.runScript')" prop="params.EXEC_SCRIPT">
+                        <el-input v-model="runtime.params['EXEC_SCRIPT']"></el-input>
+                        <span class="input-help">
+                            {{ $t('runtime.javaScriptHelper') }}
+                        </span>
+                    </el-form-item>
                     <el-row :gutter="20">
                         <el-col :span="7">
                             <el-form-item :label="$t('runtime.appPort')" prop="params.JAVA_APP_PORT">
@@ -100,7 +96,7 @@
                             </el-form-item>
                         </el-col>
                         <el-col :span="4">
-                            <el-form-item :label="$t('commons.button.add') + $t('commons.table.port')">
+                            <el-form-item :label="$t('commons.button.add')">
                                 <el-button @click="addPort">
                                     <el-icon><Plus /></el-icon>
                                 </el-button>
@@ -170,7 +166,7 @@ import { FormInstance } from 'element-plus';
 import { reactive, ref, watch } from 'vue';
 import DrawerHeader from '@/components/drawer-header/index.vue';
 
-interface OperateRrops {
+interface OperateProps {
     id?: number;
     mode: string;
     type: string;
@@ -386,7 +382,7 @@ const getRuntime = async (id: number) => {
     } catch (error) {}
 };
 
-const acceptParams = async (props: OperateRrops) => {
+const acceptParams = async (props: OperateProps) => {
     mode.value = props.mode;
     scripts.value = [];
     if (props.mode === 'create') {

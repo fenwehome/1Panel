@@ -1,16 +1,14 @@
 <template>
     <div>
-        <body>
-            <div>
-                <el-row type="flex" justify="center">
-                    <h1>{{ loadErrInfo() }}</h1>
-                </el-row>
-            </div>
-            <hr />
-            <div>
-                <el-row type="flex" justify="center"><span>nginx</span></el-row>
-            </div>
-        </body>
+        <div>
+            <el-row type="flex" justify="center">
+                <h1>{{ loadErrInfo() }}</h1>
+            </el-row>
+        </div>
+        <hr />
+        <div>
+            <el-row type="flex" justify="center"><span>nginx</span></el-row>
+        </div>
     </div>
 </template>
 
@@ -35,9 +33,3 @@ const loadErrInfo = () => {
     }
 };
 </script>
-
-<style scoped lang="scss">
-.container {
-    margin-left: 40%;
-}
-</style>

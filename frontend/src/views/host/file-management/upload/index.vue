@@ -13,9 +13,9 @@
         <div class="button-container">
             <div>
                 <el-button type="primary" @click="upload('file')">
-                    {{ $t('file.upload') }}{{ $t('file.file') }}
+                    {{ $t('file.uploadFile') }}
                 </el-button>
-                <el-button type="primary" @click="upload('dir')">{{ $t('file.upload') }}{{ $t('file.dir') }}</el-button>
+                <el-button type="primary" @click="upload('dir')">{{ $t('file.uploadDirectory') }}</el-button>
             </div>
             <el-button @click="clearFiles">{{ $t('file.clearList') }}</el-button>
         </div>
@@ -146,7 +146,6 @@ const handleDrop = async (event: DragEvent) => {
     initTempFiles();
     event.preventDefault();
     const items = event.dataTransfer?.items;
-
     if (items) {
         const entries = Array.from(items).map((item) => item.webkitGetAsEntry());
         await Promise.all(entries.map((entry) => traverseFileTree(entry)));
@@ -183,7 +182,9 @@ const convertFileToUploadFile = (file: File, path: string): UploadFile => {
 
 const traverseFileTree = async (item: any, path = '') => {
     path = path || '';
-
+    if (!item) {
+        return;
+    }
     if (item.isFile) {
         if (tmpFiles.value.length > 1000) {
             breakFlag.value = true;

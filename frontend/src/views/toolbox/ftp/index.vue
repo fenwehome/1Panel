@@ -2,15 +2,17 @@
     <div>
         <div class="app-status" style="margin-top: 20px">
             <el-card v-if="form.isExist">
-                <div>
-                    <el-tag effect="dark" type="success">FTP</el-tag>
-                    <el-tag round class="status-content" v-if="form.isActive" type="success">
-                        {{ $t('commons.status.running') }}
-                    </el-tag>
-                    <el-tag round class="status-content" v-if="!form.isActive" type="info">
-                        {{ $t('commons.status.stopped') }}
-                    </el-tag>
-                    <span class="buttons">
+                <div class="flex w-full flex-col gap-4 md:flex-row">
+                    <div class="flex flex-wrap gap-4">
+                        <el-tag effect="dark" type="success">FTP</el-tag>
+                        <el-tag round v-if="form.isActive" type="success">
+                            {{ $t('commons.status.running') }}
+                        </el-tag>
+                        <el-tag round v-if="!form.isActive" type="info">
+                            {{ $t('commons.status.stopped') }}
+                        </el-tag>
+                    </div>
+                    <div class="mt-0.5">
                         <el-button v-if="form.isActive" type="primary" @click="onOperate('stop')" link>
                             {{ $t('commons.button.stop') }}
                         </el-button>
@@ -21,17 +23,17 @@
                         <el-button type="primary" @click="onOperate('restart')" link>
                             {{ $t('container.restart') }}
                         </el-button>
-                    </span>
+                    </div>
                 </div>
             </el-card>
         </div>
         <div v-if="form.isExist">
-            <LayoutContent v-loading="loading" title="FTP">
+            <LayoutContent v-loading="loading" :title="$t('toolbox.ftp.ftp', 2)">
                 <template #toolbar>
-                    <el-row>
-                        <el-col :xs="24" :sm="16" :md="16" :lg="16" :xl="16">
+                    <div class="flex justify-between gap-2 flex-wrap sm:flex-row">
+                        <div class="flex flex-wrap gap-3">
                             <el-button type="primary" :disabled="!form.isActive" @click="onOpenDialog('add')">
-                                {{ $t('commons.button.add') }} FTP
+                                {{ $t('commons.button.add') }} {{ $t('toolbox.ftp.ftp') }}
                             </el-button>
                             <el-button @click="onSync()" :disabled="!form.isActive">
                                 {{ $t('commons.button.sync') }}
@@ -39,11 +41,11 @@
                             <el-button plain :disabled="selects.length === 0 || !form.isActive" @click="onDelete(null)">
                                 {{ $t('commons.button.delete') }}
                             </el-button>
-                        </el-col>
-                        <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+                        </div>
+                        <div class="flex flex-wrap gap-3">
                             <TableSearch @search="search()" v-model:searchName="searchName" />
-                        </el-col>
-                    </el-row>
+                        </div>
+                    </div>
                 </template>
                 <template #main>
                     <ComplexTable
@@ -146,15 +148,15 @@
             <LayoutContent title="FTP" :divider="true">
                 <template #main>
                     <div class="app-warn">
-                        <div>
+                        <div class="flex flex-col gap-2 items-center justify-center w-full sm:flex-row">
                             <span>{{ $t('toolbox.ftp.noFtp') }}</span>
-                            <span @click="toDoc">
-                                <el-icon class="ml-2"><Position /></el-icon>
+                            <span @click="toDoc" class="flex items-center justify-center gap-0.5">
+                                <el-icon><Position /></el-icon>
                                 {{ $t('firewall.quickJump') }}
                             </span>
-                            <div>
-                                <img src="@/assets/images/no_app.svg" />
-                            </div>
+                        </div>
+                        <div>
+                            <img src="@/assets/images/no_app.svg" />
                         </div>
                     </div>
                 </template>
@@ -176,6 +178,9 @@ import OperateDialog from '@/views/toolbox/ftp/operate/index.vue';
 import LogDialog from '@/views/toolbox/ftp/log/index.vue';
 import { Toolbox } from '@/api/interface/toolbox';
 import router from '@/routers';
+import { GlobalStore } from '@/store';
+
+const globalStore = GlobalStore();
 
 const loading = ref();
 const selects = ref<any>([]);
@@ -230,7 +235,7 @@ const search = async (column?: any) => {
 };
 
 const toDoc = () => {
-    window.open('https://1panel.cn/docs/user_manual/toolbox/ftp/', '_blank', 'noopener,noreferrer');
+    window.open(globalStore.docsUrl + '/user_manual/toolbox/ftp/', '_blank', 'noopener,noreferrer');
 };
 
 const toFolder = (folder: string) => {
@@ -325,7 +330,7 @@ const onDelete = async (row: Toolbox.FtpInfo | null) => {
         title: i18n.global.t('commons.button.delete'),
         names: names,
         msg: i18n.global.t('commons.msg.operatorHelper', [
-            i18n.global.t('cronjob.cronTask'),
+            i18n.global.t('toolbox.ftp.ftp'),
             i18n.global.t('commons.button.delete'),
         ]),
         api: null,

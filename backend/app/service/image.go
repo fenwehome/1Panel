@@ -286,7 +286,7 @@ func (u *ImageService) ImagePull(req dto.ImagePull) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		authStr := base64.URLEncoding.EncodeToString(encodedJSON)
+		authStr := base64.StdEncoding.EncodeToString(encodedJSON)
 		options.RegistryAuth = authStr
 	}
 	image := repo.DownloadUrl + "/" + req.ImageName
@@ -295,7 +295,7 @@ func (u *ImageService) ImagePull(req dto.ImagePull) (string, error) {
 		out, err := client.ImagePull(context.TODO(), image, options)
 		if err != nil {
 			_, _ = file.WriteString("image pull failed!")
-			global.LOG.Errorf("image %s pull failed, err: %v", image, err)
+			_, _ = file.WriteString(fmt.Sprintf("image %s pull failed, err: %v", image, err))
 			return
 		}
 		defer out.Close()
@@ -432,12 +432,15 @@ func (u *ImageService) ImageRemove(req dto.BatchDelete) error {
 	}
 	defer client.Close()
 	for _, id := range req.Names {
-		if _, err := client.ImageRemove(context.TODO(), id, types.ImageRemoveOptions{Force: req.Force, PruneChildren: true}); err != nil {
+		if _, err := client.ImageRemove(context.TODO(), id, image.RemoveOptions{Force: req.Force, PruneChildren: true}); err != nil {
 			if strings.Contains(err.Error(), "image is being used") || strings.Contains(err.Error(), "is using") {
 				if strings.Contains(id, "sha256:") {
 					return buserr.New(constant.ErrObjectInUsed)
 				}
 				return buserr.WithDetail(constant.ErrInUsed, id, nil)
+			}
+			if strings.Contains(err.Error(), "image has dependent") {
+				return buserr.New(constant.ErrObjectBeDependent)
 			}
 			return err
 		}

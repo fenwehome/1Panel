@@ -30,6 +30,8 @@ type WebsiteRes struct {
 	RuntimeName   string    `json:"runtimeName"`
 	SSLExpireDate time.Time `json:"sslExpireDate"`
 	SSLStatus     string    `json:"sslStatus"`
+	AppInstallID  uint      `json:"appInstallId"`
+	RuntimeType   string    `json:"runtimeType"`
 }
 
 type WebsiteOption struct {

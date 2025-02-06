@@ -3,7 +3,7 @@
         <el-card v-if="showStopped" class="mask-prompt">
             <span>{{ $t('tool.supervisor.notStartWarn') }}</span>
         </el-card>
-        <LayoutContent :title="$t('tool.supervisor.list')" v-loading="loading">
+        <LayoutContent :title="$t('tool.supervisor.list', 2)" v-loading="loading">
             <template #app>
                 <SuperVisorStatus
                     @setting="setting"
@@ -14,7 +14,7 @@
             </template>
             <template v-if="showTable" #toolbar>
                 <el-button type="primary" @click="openCreate">
-                    {{ $t('commons.button.create') + $t('tool.supervisor.list') }}
+                    {{ $t('commons.button.create') + $t('tool.supervisor.list').toLowerCase() }}
                 </el-button>
             </template>
             <template #main v-if="showTable">
@@ -50,14 +50,14 @@
                         :label="$t('tool.supervisor.user')"
                         prop="user"
                         show-overflow-tooltip
-                        min-width="50px"
+                        min-width="120"
                     ></el-table-column>
                     <el-table-column
                         :label="$t('tool.supervisor.numprocs')"
                         prop="numprocs"
-                        min-width="60px"
+                        min-width="120"
                     ></el-table-column>
-                    <el-table-column :label="$t('tool.supervisor.manage')" min-width="80px">
+                    <el-table-column :label="$t('tool.supervisor.manage')" min-width="120">
                         <template #default="{ row }">
                             <div v-if="row.status && row.status.length > 0 && row.hasLoad">
                                 <el-button
@@ -142,7 +142,7 @@
                         :buttons="buttons"
                         :label="$t('commons.table.operate')"
                         :fixed="mobile ? false : 'right'"
-                        width="280px"
+                        min-width="300"
                         fix
                     />
                 </ComplexTable>
@@ -156,7 +156,7 @@
 
 <script setup lang="ts">
 import SuperVisorStatus from './status/index.vue';
-import { ref } from '@vue/runtime-core';
+import { ref } from 'vue';
 import ConfigSuperVisor from './config/index.vue';
 import { computed, onMounted } from 'vue';
 import Create from './create/index.vue';
@@ -332,13 +332,13 @@ const buttons = [
         },
     },
     {
-        label: i18n.global.t('website.proxyFile'),
+        label: i18n.global.t('website.sourceFile'),
         click: function (row: HostTool.SupersivorProcess) {
             getFile(row.name, 'config');
         },
     },
     {
-        label: i18n.global.t('website.log'),
+        label: i18n.global.t('commons.button.log'),
         click: function (row: HostTool.SupersivorProcess) {
             getFile(row.name, 'out.log');
         },

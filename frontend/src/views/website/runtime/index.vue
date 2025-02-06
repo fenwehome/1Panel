@@ -25,5 +25,13 @@ const buttons = [
         label: 'Go',
         path: '/websites/runtimes/go',
     },
+    {
+        label: 'Python',
+        path: '/websites/runtimes/python',
+    },
+    {
+        label: '.NET',
+        path: '/websites/runtimes/dotnet',
+    },
 ];
 </script>

@@ -217,15 +217,14 @@ func (w WebsiteCAService) ObtainSSL(req request.WebsiteCAObtain) (*model.Website
 		if req.Domains != "" {
 			domainArray := strings.Split(req.Domains, "\n")
 			for _, domain := range domainArray {
-				if !common.IsValidDomain(domain) {
-					err = buserr.WithName("ErrDomainFormat", domain)
-					return nil, err
-				} else {
-					if ipAddress := net.ParseIP(domain); ipAddress == nil {
-						domains = append(domains, domain)
-					} else {
-						ips = append(ips, ipAddress)
+				if ipAddress := net.ParseIP(domain); ipAddress == nil {
+					if !common.IsValidDomain(domain) {
+						err = buserr.WithName("ErrDomainFormat", domain)
+						return nil, err
 					}
+					domains = append(domains, domain)
+				} else {
+					ips = append(ips, ipAddress)
 				}
 			}
 			if len(domains) > 0 {
@@ -382,6 +381,9 @@ func (w WebsiteCAService) ObtainSSL(req request.WebsiteCAObtain) (*model.Website
 			logger.Println(i18n.GetMsgByKey("ExecShellSuccess"))
 		}
 	}
+
+	reloadSystemSSL(websiteSSL, logger)
+
 	return websiteSSL, nil
 }
 
@@ -432,14 +434,14 @@ func (w WebsiteCAService) DownloadFile(id uint) (*os.File, error) {
 	if err = fileOp.CreateDir(dir, 0666); err != nil {
 		return nil, err
 	}
-	if err = fileOp.WriteFile(path.Join(dir, "ca.csr"), strings.NewReader(ca.CSR), 0644); err != nil {
+	if err = fileOp.WriteFile(path.Join(dir, "ca.crt"), strings.NewReader(ca.CSR), 0644); err != nil {
 		return nil, err
 	}
-	if err = fileOp.WriteFile(path.Join(dir, "private.key"), strings.NewReader(ca.PrivateKey), 0644); err != nil {
+	if err = fileOp.WriteFile(path.Join(dir, "ca.key"), strings.NewReader(ca.PrivateKey), 0644); err != nil {
 		return nil, err
 	}
 	fileName := ca.Name + ".zip"
-	if err = fileOp.Compress([]string{path.Join(dir, "ca.csr"), path.Join(dir, "private.key")}, dir, fileName, files.SdkZip, ""); err != nil {
+	if err = fileOp.Compress([]string{path.Join(dir, "ca.crt"), path.Join(dir, "ca.key")}, dir, fileName, files.SdkZip, ""); err != nil {
 		return nil, err
 	}
 	return os.Open(path.Join(dir, fileName))

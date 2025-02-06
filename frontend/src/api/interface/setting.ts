@@ -57,6 +57,11 @@ export namespace Setting {
         proxyUser: string;
         proxyPasswd: string;
         proxyPasswdKeep: string;
+
+        apiInterfaceStatus: string;
+        apiKey: string;
+        ipWhiteList: string;
+        apiKeyValidityTime: number;
     }
     export interface SettingUpdate {
         key: string;
@@ -134,7 +139,7 @@ export namespace Setting {
         description: string;
         status: string;
         message: string;
-        createdAt: DateTimeFormats;
+        created_at: DateTimeFormats;
         version: string;
         interruptStep: string;
         recoverStatus: string;
@@ -144,6 +149,11 @@ export namespace Setting {
         rollbackMessage: string;
         lastRollbackedAt: string;
         secret: string;
+    }
+    export interface SnapshotFile {
+        id: number;
+        name: string;
+        size: number;
     }
     export interface SnapshotStatus {
         panel: string;
@@ -168,12 +178,23 @@ export namespace Setting {
         licenseName: string;
         assigneeName: string;
         productPro: string;
+        versionConstraint: string;
         trial: boolean;
+        offline: boolean;
         status: string;
         message: string;
+        smsUsed: number;
+        smsTotal: number;
     }
     export interface LicenseStatus {
         productPro: string;
+        trial: boolean;
         status: string;
+    }
+    export interface ApiConfig {
+        apiInterfaceStatus: string;
+        apiKey: string;
+        ipWhiteList: string;
+        apiKeyValidityTime: number;
     }
 }

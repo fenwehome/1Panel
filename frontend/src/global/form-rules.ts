@@ -211,9 +211,22 @@ const checkImageName = (rule: any, value: any, callback: any) => {
     if (value === '' || typeof value === 'undefined' || value == null) {
         callback(new Error(i18n.global.t('commons.rule.imageName')));
     } else {
-        const reg = /^[a-zA-Z0-9]{1}[a-z:A-Z0-9_/.-]{0,149}$/;
+        const reg = /^[a-zA-Z0-9]{1}[a-z:@A-Z0-9_/.-]{0,256}$/;
         if (!reg.test(value) && value !== '') {
             callback(new Error(i18n.global.t('commons.rule.imageName')));
+        } else {
+            callback();
+        }
+    }
+};
+
+const checkComposeName = (rule: any, value: any, callback: any) => {
+    if (value === '' || typeof value === 'undefined' || value == null) {
+        callback(new Error(i18n.global.t('commons.rule.composeName')));
+    } else {
+        const reg = /^[a-z0-9]{1}[a-z0-9_-]{0,256}$/;
+        if (!reg.test(value) && value !== '') {
+            callback(new Error(i18n.global.t('commons.rule.composeName')));
         } else {
             callback();
         }
@@ -540,6 +553,19 @@ const checkHttpOrHttps = (rule, value, callback) => {
     }
 };
 
+const checkPhone = (rule: any, value: any, callback: any) => {
+    if (value === '' || typeof value === 'undefined' || value == null) {
+        callback();
+    } else {
+        const reg = /^(?:(?:\+|00)86)?1[3-9]\d{9}$/;
+        if (!reg.test(value) && value !== '') {
+            callback(new Error(i18n.global.t('commons.rule.phone')));
+        } else {
+            callback();
+        }
+    }
+};
+
 interface CommonRule {
     requiredInput: FormItemRule;
     requiredSelect: FormItemRule;
@@ -551,6 +577,7 @@ interface CommonRule {
     simplePassword: FormItemRule;
     dbName: FormItemRule;
     imageName: FormItemRule;
+    composeName: FormItemRule;
     volumeName: FormItemRule;
     linuxName: FormItemRule;
     password: FormItemRule;
@@ -584,6 +611,7 @@ interface CommonRule {
     paramExtUrl: FormItemRule;
     paramSimple: FormItemRule;
     paramHttp: FormItemRule;
+    phone: FormItemRule;
 }
 
 export const Rules: CommonRule = {
@@ -628,6 +656,11 @@ export const Rules: CommonRule = {
     imageName: {
         required: true,
         validator: checkImageName,
+        trigger: 'blur',
+    },
+    composeName: {
+        required: true,
+        validator: checkComposeName,
         trigger: 'blur',
     },
     volumeName: {
@@ -804,6 +837,10 @@ export const Rules: CommonRule = {
     },
     ipv4: {
         validator: checkIpv4,
+        trigger: 'blur',
+    },
+    phone: {
+        validator: checkPhone,
         trigger: 'blur',
     },
 };

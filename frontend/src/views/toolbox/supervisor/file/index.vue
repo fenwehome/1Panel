@@ -61,7 +61,7 @@
 import { Codemirror } from 'vue-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { computed, onUnmounted, reactive, ref, shallowRef } from 'vue';
+import { computed, onUnmounted, reactive, ref, shallowRef, watch } from 'vue';
 import { OperateSupervisorProcessFile } from '@/api/modules/host-tool';
 import i18n from '@/lang';
 import { TabsPaneContext } from 'element-plus';
@@ -92,17 +92,19 @@ let timer: NodeJS.Timer | null = null;
 
 const em = defineEmits(['search']);
 
+watch(open, (val) => {
+    if (screenfull.isEnabled && !val && !mobile.value) screenfull.exit();
+});
+
 const mobile = computed(() => {
     return globalStore.isMobile();
 });
 
 function toggleFullscreen() {
-    if (screenfull.isEnabled) {
-        screenfull.toggle();
-    }
+    globalStore.isFullScreen = !globalStore.isFullScreen;
 }
 const loadTooltip = () => {
-    return i18n.global.t('commons.button.' + (screenfull.isFullscreen ? 'quitFullscreen' : 'fullscreen'));
+    return i18n.global.t('commons.button.' + (globalStore.isFullScreen ? 'quitFullscreen' : 'fullscreen'));
 };
 
 const getContent = () => {
@@ -134,6 +136,7 @@ const changeTail = () => {
 const handleClose = () => {
     content.value = '';
     open.value = false;
+    globalStore.isFullScreen = false;
 };
 
 const submit = () => {
@@ -173,9 +176,9 @@ const acceptParams = (name: string, file: string, operate: string) => {
 const cleanLog = async () => {
     let log = req.file === 'out.log' ? i18n.global.t('logs.runLog') : i18n.global.t('logs.errLog');
     opRef.value.acceptParams({
-        title: i18n.global.t('commons.msg.clean'),
+        title: i18n.global.t('commons.button.clean'),
         names: [req.name],
-        msg: i18n.global.t('commons.msg.operatorHelper', [log, i18n.global.t('commons.msg.clean')]),
+        msg: i18n.global.t('commons.msg.operatorHelper', [log, i18n.global.t('commons.button.clean')]),
         api: OperateSupervisorProcessFile,
         params: { name: req.name, operate: 'clear', file: req.file },
     });

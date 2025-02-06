@@ -124,8 +124,14 @@ export const deleteBackupRecord = (params: { ids: number[] }) => {
 export const searchBackupRecords = (params: Backup.SearchBackupRecord) => {
     return http.post<ResPage<Backup.RecordInfo>>(`/settings/backup/record/search`, params, TimeoutEnum.T_5M);
 };
+export const loadBackupSize = (param: Backup.SearchBackupRecord) => {
+    return http.post<Array<Backup.BackupFile>>(`/settings/backup/record/size`, param);
+};
 export const searchBackupRecordsByCronjob = (params: Backup.SearchBackupRecordByCronjob) => {
     return http.post<ResPage<Backup.RecordInfo>>(`/settings/backup/record/search/bycronjob`, params, TimeoutEnum.T_5M);
+};
+export const loadCronjobBackupSize = (param: Backup.SearchBackupRecordByCronjob) => {
+    return http.post<Array<Backup.BackupFile>>(`/settings/backup/record/size/bycronjob`, param);
 };
 
 export const getBackupList = () => {
@@ -196,6 +202,9 @@ export const snapshotRollback = (param: Setting.SnapshotRecover) => {
 export const searchSnapshotPage = (param: SearchWithPage) => {
     return http.post<ResPage<Setting.SnapshotInfo>>(`/settings/snapshot/search`, param);
 };
+export const loadSnapshotSize = (param: SearchWithPage) => {
+    return http.post<Array<Setting.SnapshotFile>>(`/settings/snapshot/size`, param);
+};
 
 // upgrade
 export const loadUpgradeInfo = () => {
@@ -206,4 +215,12 @@ export const loadReleaseNotes = (version: string) => {
 };
 export const upgrade = (version: string) => {
     return http.post(`/settings/upgrade`, { version: version });
+};
+
+// api config
+export const generateApiKey = () => {
+    return http.post<string>(`/settings/api/config/generate/key`);
+};
+export const updateApiConfig = (param: Setting.ApiConfig) => {
+    return http.post(`/settings/api/config/update`, param);
 };

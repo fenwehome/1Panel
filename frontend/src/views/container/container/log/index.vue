@@ -17,12 +17,12 @@
                     </template>
                 </DrawerHeader>
             </template>
-            <div>
-                <el-select @change="searchLogs" class="fetchClass" v-model="logSearch.mode">
+            <div class="flex w-full flex-col gap-2 md:flex-row">
+                <el-select @change="searchLogs" v-model="logSearch.mode">
                     <template #prefix>{{ $t('container.fetch') }}</template>
                     <el-option v-for="item in timeOptions" :key="item.label" :value="item.value" :label="item.label" />
                 </el-select>
-                <el-select @change="searchLogs" class="tailClass" v-model.number="logSearch.tail">
+                <el-select @change="searchLogs" v-model.number="logSearch.tail">
                     <template #prefix>{{ $t('container.lines') }}</template>
                     <el-option :value="0" :label="$t('commons.table.all')" />
                     <el-option :value="100" :label="100" />
@@ -30,15 +30,13 @@
                     <el-option :value="500" :label="500" />
                     <el-option :value="1000" :label="1000" />
                 </el-select>
-                <div class="margin-button" style="float: left">
-                    <el-checkbox border @change="searchLogs" v-model="logSearch.isWatch">
-                        {{ $t('commons.button.watch') }}
-                    </el-checkbox>
-                </div>
-                <el-button class="margin-button" @click="onDownload" icon="Download">
+                <el-checkbox border @change="searchLogs" v-model="logSearch.isWatch">
+                    {{ $t('commons.button.watch') }}
+                </el-checkbox>
+                <el-button @click="onDownload" icon="Download">
                     {{ $t('file.download') }}
                 </el-button>
-                <el-button class="margin-button" @click="onClean" icon="Delete">
+                <el-button @click="onClean" icon="Delete">
                     {{ $t('commons.button.clean') }}
                 </el-button>
             </div>
@@ -124,17 +122,16 @@ const timeOptions = ref([
 ]);
 
 function toggleFullscreen() {
-    if (screenfull.isEnabled) {
-        screenfull.toggle();
-    }
+    globalStore.isFullScreen = !globalStore.isFullScreen;
 }
 
 const loadTooltip = () => {
-    return i18n.global.t('commons.button.' + (screenfull.isFullscreen ? 'quitFullscreen' : 'fullscreen'));
+    return i18n.global.t('commons.button.' + (globalStore.isFullScreen ? 'quitFullscreen' : 'fullscreen'));
 };
 const handleClose = async () => {
     terminalSocket.value?.send('close conn');
     logVisible.value = false;
+    globalStore.isFullScreen = false;
 };
 watch(logVisible, (val) => {
     if (screenfull.isEnabled && !val && !mobile.value) screenfull.exit();
@@ -164,10 +161,8 @@ const searchLogs = async () => {
 };
 
 const onDownload = async () => {
-    let msg =
-        logSearch.tail === 0
-            ? i18n.global.t('container.downLogHelper1', [logSearch.container])
-            : i18n.global.t('container.downLogHelper2', [logSearch.container, logSearch.tail]);
+    logSearch.tail = 0;
+    let msg = i18n.global.t('container.downLogHelper1', [logSearch.container]);
     ElMessageBox.confirm(msg, i18n.global.t('file.download'), {
         confirmButtonText: i18n.global.t('commons.button.confirm'),
         cancelButtonText: i18n.global.t('commons.button.cancel'),
@@ -236,19 +231,14 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.margin-button {
-    margin-left: 20px;
-}
 .fullScreen {
     border: none;
 }
-.tailClass {
-    width: 20%;
+.select-width {
+    width: 50%;
     float: left;
-    margin-left: 20px;
 }
-.fetchClass {
-    width: 30%;
-    float: left;
+.el-button + .el-button {
+    margin: 0 !important;
 }
 </style>

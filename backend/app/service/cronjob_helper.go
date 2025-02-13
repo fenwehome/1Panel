@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 	"path"
+	pathUtils "path"
 	"strings"
 	"time"
 
 	"github.com/1Panel-dev/1Panel/backend/buserr"
 	"github.com/1Panel-dev/1Panel/backend/i18n"
 
+	"github.com/1Panel-dev/1Panel/backend/app/dto"
 	"github.com/1Panel-dev/1Panel/backend/app/model"
 	"github.com/1Panel-dev/1Panel/backend/app/repo"
 	"github.com/1Panel-dev/1Panel/backend/constant"
@@ -19,6 +21,7 @@ import (
 	"github.com/1Panel-dev/1Panel/backend/utils/cmd"
 	"github.com/1Panel-dev/1Panel/backend/utils/files"
 	"github.com/1Panel-dev/1Panel/backend/utils/ntp"
+	"github.com/1Panel-dev/1Panel/backend/utils/xpack"
 	"github.com/pkg/errors"
 )
 
@@ -84,12 +87,12 @@ func (u *CronjobService) HandleJob(cronjob *model.Cronjob) {
 			_ = cronjobRepo.UpdateRecords(record.ID, map[string]interface{}{"records": record.Records})
 			err = u.handleSnapshot(*cronjob, record.StartTime, record.Records)
 		}
-
 		if err != nil {
 			if len(message) != 0 {
 				record.Records, _ = mkdirAndWriteFile(cronjob, record.StartTime, message)
 			}
 			cronjobRepo.EndRecords(record, constant.StatusFailed, err.Error(), record.Records)
+			handleCronJobAlert(cronjob)
 			return
 		}
 		if len(message) != 0 {
@@ -139,7 +142,6 @@ func handleTar(sourceDir, targetDir, name, exclusionRules string, secret string)
 
 	excludes := strings.Split(exclusionRules, ",")
 	excludeRules := ""
-	excludes = append(excludes, "*.sock")
 	for _, exclude := range excludes {
 		if len(exclude) == 0 {
 			continue
@@ -162,10 +164,14 @@ func handleTar(sourceDir, targetDir, name, exclusionRules string, secret string)
 
 	if len(secret) != 0 {
 		extraCmd := "| openssl enc -aes-256-cbc -salt -k '" + secret + "' -out"
-		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read -zcf %s %s %s %s", " -"+excludeRules, path, extraCmd, targetDir+"/"+name)
+		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read --exclude-from=<(find %s -type s -print) -zcf %s %s %s %s", sourceDir, " -"+excludeRules, path, extraCmd, targetDir+"/"+name)
 		global.LOG.Debug(strings.ReplaceAll(commands, fmt.Sprintf(" %s ", secret), "******"))
 	} else {
-		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read -zcf %s %s %s", targetDir+"/"+name, excludeRules, path)
+		itemPrefix := pathUtils.Base(sourceDir)
+		if itemPrefix == "/" {
+			itemPrefix = ""
+		}
+		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read --exclude-from=<(find %s -type s -printf '%s' | sed 's|^|%s/|') -zcf %s %s %s", sourceDir, "%P\n", itemPrefix, targetDir+"/"+name, excludeRules, path)
 		global.LOG.Debug(commands)
 	}
 	stdout, err := cmd.ExecWithTimeOut(commands, 24*time.Hour)
@@ -239,7 +245,6 @@ func (u *CronjobService) handleCutWebsiteLog(cronjob *model.Cronjob, startTime t
 			_ = fileOp.WriteFile(srcErrorLogPath, strings.NewReader(""), 0755)
 		}
 		msg := i18n.GetMsgWithMap("CutWebsiteLogSuccess", map[string]interface{}{"name": website.PrimaryDomain, "path": dstFilePath})
-		global.LOG.Infof(msg)
 		msgs = append(msgs, msg)
 	}
 	u.removeExpiredLog(*cronjob)
@@ -326,7 +331,6 @@ func (u *CronjobService) uploadCronjobBackFile(cronjob model.Cronjob, accountMap
 }
 
 func (u *CronjobService) removeExpiredBackup(cronjob model.Cronjob, accountMap map[string]cronjobUploadHelper, record model.BackupRecord) {
-	global.LOG.Infof("start to handle remove expired, retain copies: %d", cronjob.RetainCopies)
 	var opts []repo.DBOption
 	opts = append(opts, commonRepo.WithByFrom("cronjob"))
 	opts = append(opts, backupRepo.WithByCronID(cronjob.ID))
@@ -361,7 +365,6 @@ func (u *CronjobService) removeExpiredBackup(cronjob model.Cronjob, accountMap m
 }
 
 func (u *CronjobService) removeExpiredLog(cronjob model.Cronjob) {
-	global.LOG.Infof("start to handle remove expired, retain copies: %d", cronjob.RetainCopies)
 	records, _ := cronjobRepo.ListRecord(cronjobRepo.WithByJobID(int(cronjob.ID)), commonRepo.WithOrderBy("created_at desc"))
 	if len(records) <= int(cronjob.RetainCopies) {
 		return
@@ -390,4 +393,18 @@ func (u *CronjobService) generateLogsPath(cronjob model.Cronjob, startTime time.
 
 func hasBackup(cronjobType string) bool {
 	return cronjobType == "app" || cronjobType == "database" || cronjobType == "website" || cronjobType == "directory" || cronjobType == "snapshot" || cronjobType == "log"
+}
+
+func handleCronJobAlert(cronjob *model.Cronjob) {
+	pushAlert := dto.PushAlert{
+		TaskName:  cronjob.Name,
+		AlertType: cronjob.Type,
+		EntryID:   cronjob.ID,
+		Param:     cronjob.Type,
+	}
+	err := xpack.PushAlert(pushAlert)
+	if err != nil {
+		global.LOG.Errorf("cronjob alert push failed, err: %v", err)
+		return
+	}
 }

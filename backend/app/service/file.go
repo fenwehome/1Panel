@@ -50,6 +50,7 @@ type IFileService interface {
 	ChangeMode(op request.FileCreate) error
 	BatchChangeModeAndOwner(op request.FileRoleReq) error
 	ReadLogByLine(req request.FileReadByLineReq) (*response.FileLineContent, error)
+	BatchCheckFiles(req request.FilePathsCheck) []response.ExistFileInfo
 }
 
 var filteredPaths = []string{
@@ -62,8 +63,12 @@ func NewIFileService() IFileService {
 
 func (f *FileService) GetFileList(op request.FileOption) (response.FileInfo, error) {
 	var fileInfo response.FileInfo
-	if _, err := os.Stat(op.Path); err != nil && os.IsNotExist(err) {
+	data, err := os.Stat(op.Path)
+	if err != nil && os.IsNotExist(err) {
 		return fileInfo, nil
+	}
+	if !data.IsDir() {
+		op.FileOption.Path = filepath.Dir(op.FileOption.Path)
 	}
 	info, err := files.NewFileInfo(op.FileOption)
 	if err != nil {
@@ -141,7 +146,7 @@ func shouldFilterPath(path string) bool {
 func (f *FileService) buildFileTree(node *response.FileTree, items []*files.FileInfo, op request.FileOption, level int) error {
 	for _, v := range items {
 		if shouldFilterPath(v.Path) {
-			global.LOG.Info("File Tree: Skipping %s due to filter\n", v.Path)
+			global.LOG.Infof("File Tree: Skipping %s due to filter\n", v.Path)
 			continue
 		}
 		childNode := response.FileTree{
@@ -167,7 +172,7 @@ func (f *FileService) buildChildNode(childNode *response.FileTree, fileInfo *fil
 	subInfo, err := files.NewFileInfo(op.FileOption)
 	if err != nil {
 		if os.IsPermission(err) || errors.Is(err, unix.EACCES) {
-			global.LOG.Info("File Tree: Skipping %s due to permission denied\n", fileInfo.Path)
+			global.LOG.Infof("File Tree: Skipping %s due to permission denied\n", fileInfo.Path)
 			return nil
 		}
 		global.LOG.Errorf("File Tree: Skipping %s due to error: %s\n", fileInfo.Path, err.Error())
@@ -207,6 +212,12 @@ func (f *FileService) Create(op request.FileCreate) error {
 }
 
 func (f *FileService) Delete(op request.FileDelete) error {
+	if op.IsDir {
+		excludeDir := global.CONF.System.DataDir
+		if filepath.Base(op.Path) == ".1panel_clash" || op.Path == excludeDir {
+			return buserr.New(constant.ErrPathNotDelete)
+		}
+	}
 	fo := files.NewFileOp()
 	recycleBinStatus, _ := settingRepo.Get(settingRepo.WithByKey("FileRecycleBin"))
 	if recycleBinStatus.Value == "disable" {
@@ -468,17 +479,49 @@ func (f *FileService) ReadLogByLine(req request.FileReadByLineReq) (*response.Fi
 		}
 	case "image-pull", "image-push", "image-build", "compose-create":
 		logFilePath = path.Join(global.CONF.System.TmpDir, fmt.Sprintf("docker_logs/%s", req.Name))
+	case "ollama-model":
+		fileName := strings.ReplaceAll(req.Name, ":", "-")
+		if _, err := os.Stat(fileName); err != nil {
+			if strings.HasSuffix(req.Name, ":latest") {
+				fileName = strings.TrimSuffix(req.Name, ":latest")
+			}
+		}
+		logFilePath = path.Join(global.CONF.System.DataDir, "log", "AITools", fileName)
 	}
 
 	lines, isEndOfFile, total, err := files.ReadFileByLine(logFilePath, req.Page, req.PageSize, req.Latest)
 	if err != nil {
 		return nil, err
 	}
+	if req.Latest && req.Page == 1 && len(lines) < 1000 && total > 1 {
+		preLines, _, _, err := files.ReadFileByLine(logFilePath, total-1, req.PageSize, false)
+		if err != nil {
+			return nil, err
+		}
+		lines = append(preLines, lines...)
+	}
+
 	res := &response.FileLineContent{
 		Content: strings.Join(lines, "\n"),
 		End:     isEndOfFile,
 		Path:    logFilePath,
 		Total:   total,
+		Lines:   lines,
 	}
 	return res, nil
+}
+
+func (f *FileService) BatchCheckFiles(req request.FilePathsCheck) []response.ExistFileInfo {
+	fileList := make([]response.ExistFileInfo, 0, len(req.Paths))
+	for _, filePath := range req.Paths {
+		if info, err := os.Stat(filePath); err == nil {
+			fileList = append(fileList, response.ExistFileInfo{
+				Size:    float64(info.Size()),
+				Name:    info.Name(),
+				Path:    filePath,
+				ModTime: info.ModTime(),
+			})
+		}
+	}
+	return fileList
 }

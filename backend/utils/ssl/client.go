@@ -3,7 +3,9 @@ package ssl
 import (
 	"crypto"
 	"encoding/json"
+	"github.com/go-acme/lego/v4/providers/dns/rainyun"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/1Panel-dev/1Panel/backend/app/model"
@@ -14,13 +16,16 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/providers/dns/alidns"
+	"github.com/go-acme/lego/v4/providers/dns/clouddns"
 	"github.com/go-acme/lego/v4/providers/dns/cloudflare"
 	"github.com/go-acme/lego/v4/providers/dns/dnspod"
 	"github.com/go-acme/lego/v4/providers/dns/godaddy"
+	"github.com/go-acme/lego/v4/providers/dns/huaweicloud"
 	"github.com/go-acme/lego/v4/providers/dns/namecheap"
 	"github.com/go-acme/lego/v4/providers/dns/namedotcom"
 	"github.com/go-acme/lego/v4/providers/dns/namesilo"
 	"github.com/go-acme/lego/v4/providers/dns/tencentcloud"
+	"github.com/go-acme/lego/v4/providers/dns/volcengine"
 	"github.com/go-acme/lego/v4/providers/http/webroot"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/pkg/errors"
@@ -65,12 +70,16 @@ type DnsType string
 const (
 	DnsPod       DnsType = "DnsPod"
 	AliYun       DnsType = "AliYun"
+	Volcengine   DnsType = "Volcengine"
 	CloudFlare   DnsType = "CloudFlare"
+	CloudDns     DnsType = "CloudDns"
 	NameSilo     DnsType = "NameSilo"
 	NameCheap    DnsType = "NameCheap"
 	NameCom      DnsType = "NameCom"
 	Godaddy      DnsType = "Godaddy"
 	TencentCloud DnsType = "TencentCloud"
+	HuaweiCloud  DnsType = "HuaweiCloud"
+	RainYun      DnsType = "RainYun"
 )
 
 type DNSParam struct {
@@ -83,6 +92,9 @@ type DNSParam struct {
 	APIUser   string `json:"apiUser"`
 	APISecret string `json:"apiSecret"`
 	SecretID  string `json:"secretID"`
+	Region    string `json:"region"`
+	ClientID  string `json:"clientID"`
+	Password  string `json:"password"`
 }
 
 var (
@@ -118,6 +130,14 @@ func (c *AcmeClient) UseDns(dnsType DnsType, params string, websiteSSL model.Web
 		alidnsConfig.PollingInterval = pollingInterval
 		alidnsConfig.TTL = ttl
 		p, err = alidns.NewDNSProviderConfig(alidnsConfig)
+	case Volcengine:
+		volcConfig := volcengine.NewDefaultConfig()
+		volcConfig.SecretKey = param.SecretKey
+		volcConfig.AccessKey = param.AccessKey
+		volcConfig.PropagationTimeout = propagationTimeout
+		volcConfig.PollingInterval = pollingInterval
+		volcConfig.TTL = ttl
+		p, err = volcengine.NewDNSProviderConfig(volcConfig)
 	case CloudFlare:
 		cloudflareConfig := cloudflare.NewDefaultConfig()
 		cloudflareConfig.AuthEmail = param.Email
@@ -126,6 +146,15 @@ func (c *AcmeClient) UseDns(dnsType DnsType, params string, websiteSSL model.Web
 		cloudflareConfig.PollingInterval = pollingInterval
 		cloudflareConfig.TTL = 3600
 		p, err = cloudflare.NewDNSProviderConfig(cloudflareConfig)
+	case CloudDns:
+		clouddnsConfig := clouddns.NewDefaultConfig()
+		clouddnsConfig.ClientID = param.ClientID
+		clouddnsConfig.Email = param.Email
+		clouddnsConfig.Password = param.Password
+		clouddnsConfig.PropagationTimeout = propagationTimeout
+		clouddnsConfig.PollingInterval = pollingInterval
+		clouddnsConfig.TTL = ttl
+		p, err = clouddns.NewDNSProviderConfig(clouddnsConfig)
 	case NameCheap:
 		namecheapConfig := namecheap.NewDefaultConfig()
 		namecheapConfig.APIKey = param.APIkey
@@ -165,6 +194,22 @@ func (c *AcmeClient) UseDns(dnsType DnsType, params string, websiteSSL model.Web
 		tencentCloudConfig.PollingInterval = pollingInterval
 		tencentCloudConfig.TTL = ttl
 		p, err = tencentcloud.NewDNSProviderConfig(tencentCloudConfig)
+	case HuaweiCloud:
+		huaweiCloudConfig := huaweicloud.NewDefaultConfig()
+		huaweiCloudConfig.AccessKeyID = param.AccessKey
+		huaweiCloudConfig.SecretAccessKey = param.SecretKey
+		huaweiCloudConfig.Region = param.Region
+		huaweiCloudConfig.PropagationTimeout = propagationTimeout
+		huaweiCloudConfig.PollingInterval = pollingInterval
+		huaweiCloudConfig.TTL = int32(ttl)
+		p, err = huaweicloud.NewDNSProviderConfig(huaweiCloudConfig)
+	case RainYun:
+		rainyunConfig := rainyun.NewDefaultConfig()
+		rainyunConfig.APIKey = param.APIkey
+		rainyunConfig.PropagationTimeout = propagationTimeout
+		rainyunConfig.PollingInterval = pollingInterval
+		rainyunConfig.TTL = ttl
+		p, err = rainyun.NewDNSProviderConfig(rainyunConfig)
 	}
 	if err != nil {
 		return err
@@ -186,7 +231,7 @@ func (c *AcmeClient) UseDns(dnsType DnsType, params string, websiteSSL model.Web
 		dns01.CondOption(len(nameservers) > 0,
 			dns01.AddRecursiveNameservers(nameservers)),
 		dns01.CondOption(websiteSSL.SkipDNS,
-			dns01.DisableCompletePropagationRequirement()),
+			dns01.DisableAuthoritativeNssPropagationRequirement()),
 		dns01.AddDNSTimeout(10*time.Minute),
 	)
 }
@@ -292,8 +337,12 @@ func (c *AcmeClient) GetDNSResolve(domains []string) (map[string]Resolve, error)
 			continue
 		}
 		challengeInfo := dns01.GetChallengeInfo(domain, keyAuth)
+		fqdn := challengeInfo.FQDN
+		if strings.HasPrefix(domain, "*.") && strings.Contains(fqdn, "*.") {
+			fqdn = strings.Replace(fqdn, "*.", "", 1)
+		}
 		resolves[domain] = Resolve{
-			Key:   challengeInfo.FQDN,
+			Key:   fqdn,
 			Value: challengeInfo.Value,
 		}
 	}

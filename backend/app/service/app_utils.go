@@ -186,17 +186,18 @@ func createLink(ctx context.Context, app model.App, appInstall *model.AppInstall
 			}
 		case constant.AppRedis:
 			if password, ok := params["PANEL_REDIS_ROOT_PASSWORD"]; ok {
-				if password != "" {
-					authParam := dto.RedisAuthParam{
-						RootPassword: password.(string),
-					}
-					authByte, err := json.Marshal(authParam)
-					if err != nil {
-						return err
-					}
-					appInstall.Param = string(authByte)
+				authParam := dto.RedisAuthParam{
+					RootPassword: "",
 				}
-				database.Password = password.(string)
+				if password != "" {
+					authParam.RootPassword = password.(string)
+					database.Password = password.(string)
+				}
+				authByte, err := json.Marshal(authParam)
+				if err != nil {
+					return err
+				}
+				appInstall.Param = string(authByte)
 			}
 		}
 		if err := databaseRepo.Create(ctx, database); err != nil {
@@ -516,8 +517,19 @@ func upgradeInstall(req request.AppInstallUpgrade) error {
 		)
 		global.LOG.Infof(i18n.GetMsgWithName("UpgradeAppStart", install.Name, nil))
 		if req.Backup {
-			backupRecord, err := NewIBackupService().AppBackup(dto.CommonBackup{Name: install.App.Key, DetailName: install.Name})
+			iBackUpService := NewIBackupService()
+			fileName := fmt.Sprintf("upgrade_backup_%s_%s.tar.gz", install.Name, time.Now().Format(constant.DateTimeSlimLayout)+common.RandStrAndNum(5))
+			backupRecord, err := iBackUpService.AppBackup(dto.CommonBackup{Name: install.App.Key, DetailName: install.Name, FileName: fileName})
 			if err == nil {
+				backups, _ := iBackUpService.ListAppRecords(install.App.Key, install.Name, "upgrade_backup")
+				if len(backups) > 3 {
+					backupsToDelete := backups[:len(backups)-3]
+					var deleteIDs []uint
+					for _, backup := range backupsToDelete {
+						deleteIDs = append(deleteIDs, backup.ID)
+					}
+					_ = iBackUpService.BatchDeleteRecord(deleteIDs)
+				}
 				localDir, err := loadLocalDir()
 				if err == nil {
 					backupFile = path.Join(localDir, backupRecord.FileDir, backupRecord.FileName)
@@ -572,7 +584,7 @@ func upgradeInstall(req request.AppInstallUpgrade) error {
 				_ = appDetailRepo.Update(context.Background(), detail)
 			}
 			go func() {
-				_, _, _ = httpUtil.HandleGet(detail.DownloadCallBackUrl, http.MethodGet, constant.TimeOut5s)
+				RequestDownloadCallBack(detail.DownloadCallBackUrl)
 			}()
 		}
 
@@ -810,7 +822,7 @@ func copyData(app model.App, appDetail model.AppDetail, appInstall *model.AppIns
 			return
 		}
 		go func() {
-			_, _, _ = httpUtil.HandleGet(appDetail.DownloadCallBackUrl, http.MethodGet, constant.TimeOut5s)
+			RequestDownloadCallBack(appDetail.DownloadCallBackUrl)
 		}()
 	}
 	appKey := app.Key
@@ -912,18 +924,34 @@ func upApp(appInstall *model.AppInstall, pullImages bool) {
 			errMsg string
 		)
 		if pullImages && appInstall.App.Type != "php" {
-			out, err = compose.Pull(appInstall.GetComposePath())
+			projectName := strings.ToLower(appInstall.Name)
+			envByte, err := files.NewFileOp().GetContent(appInstall.GetEnvPath())
 			if err != nil {
-				if out != "" {
-					if strings.Contains(out, "no such host") {
-						errMsg = i18n.GetMsgByKey("ErrNoSuchHost") + ":"
-					}
-					if strings.Contains(out, "timeout") {
-						errMsg = i18n.GetMsgByKey("ErrImagePullTimeOut") + ":"
+				return err
+			}
+			images, err := composeV2.GetDockerComposeImages(projectName, envByte, []byte(appInstall.DockerCompose))
+			if err != nil {
+				return err
+			}
+			for _, image := range images {
+				if out, err = cmd.ExecWithTimeOut("docker pull "+image, 60*time.Minute); err != nil {
+					if out != "" {
+						if strings.Contains(out, "no such host") {
+							errMsg = i18n.GetMsgByKey("ErrNoSuchHost") + ":"
+						}
+						if strings.Contains(out, "timeout") {
+							errMsg = i18n.GetMsgByKey("ErrImagePullTimeOut") + ":"
+						}
+					} else {
+						if err.Error() == buserr.New(constant.ErrCmdTimeout).Error() {
+							errMsg = i18n.GetMsgByKey("ErrImagePullTimeOut")
+						} else {
+							errMsg = i18n.GetMsgWithMap("ErrImagePull", map[string]interface{}{"err": err.Error()})
+						}
 					}
 					appInstall.Message = errMsg + out
+					return err
 				}
-				return err
 			}
 		}
 
@@ -1023,6 +1051,8 @@ func getApps(oldApps []model.App, items []dto.AppDefine) map[string]model.App {
 		app.Key = key
 		app.ShortDescZh = config.ShortDescZh
 		app.ShortDescEn = config.ShortDescEn
+		description, _ := json.Marshal(config.Description)
+		app.Description = string(description)
 		app.Website = config.Website
 		app.Document = config.Document
 		app.Github = config.Github
@@ -1079,11 +1109,7 @@ func handleLocalAppDetail(versionDir string, appDetail *model.AppDetail) error {
 		return buserr.WithMap(constant.ErrFileParseApp, map[string]interface{}{"name": "data.yml", "err": err.Error()}, err)
 	}
 
-	additionalProperties, ok := dataMap["additionalProperties"].(map[string]interface{})
-	if !ok {
-		return buserr.WithName(constant.ErrAppParamKey, "additionalProperties")
-	}
-
+	additionalProperties, _ := dataMap["additionalProperties"].(map[string]interface{})
 	formFieldsInterface, ok := additionalProperties["formFields"]
 	if ok {
 		formFields, ok := formFieldsInterface.([]interface{})
@@ -1126,14 +1152,32 @@ func handleLocalApp(appDir string) (app *model.App, err error) {
 		err = buserr.WithMap(constant.ErrFileParseApp, map[string]interface{}{"name": "data.yml", "err": err.Error()}, err)
 		return
 	}
-	app = &localAppDefine.AppProperty
+	appDefine := localAppDefine.AppProperty
+	app = &model.App{}
+	app.Name = appDefine.Name
+	app.TagsKey = append(appDefine.Tags, "Local")
+	app.Type = appDefine.Type
+	app.CrossVersionUpdate = appDefine.CrossVersionUpdate
+	app.Limit = appDefine.Limit
+	app.Recommend = appDefine.Recommend
+	app.Website = appDefine.Website
+	app.Github = appDefine.Github
+	app.Document = appDefine.Document
+
+	if appDefine.ShortDescZh != "" {
+		appDefine.Description.Zh = appDefine.ShortDescZh
+	}
+	if appDefine.ShortDescEn != "" {
+		appDefine.Description.En = appDefine.ShortDescEn
+	}
+	desc, _ := json.Marshal(appDefine.Description)
+	app.Description = string(desc)
+
+	app.Key = "local" + appDefine.Key
 	app.Resource = constant.AppResourceLocal
 	app.Status = constant.AppNormal
 	app.Recommend = 9999
-	app.TagsKey = append(app.TagsKey, "Local")
-	app.Key = "local" + app.Key
-	readMePath := path.Join(appDir, "README.md")
-	readMeByte, err := fileOp.GetContent(readMePath)
+	readMeByte, err := fileOp.GetContent(path.Join(appDir, "README.md"))
 	if err == nil {
 		app.ReadMe = string(readMeByte)
 	}
@@ -1224,6 +1268,31 @@ func synAppInstall(containers map[string]types.Container, appInstall *model.AppI
 	_ = appInstallRepo.Save(context.Background(), appInstall)
 }
 
+func getMajorVersion(version string) string {
+	parts := strings.Split(version, ".")
+	if len(parts) >= 2 {
+		return parts[0] + "." + parts[1]
+	}
+	return version
+}
+
+func ignoreUpdate(installed model.AppInstall) bool {
+	if installed.App.Type == "php" || installed.Status == constant.Installing {
+		return true
+	}
+	if installed.App.Key == constant.AppMysql {
+		majorVersion := getMajorVersion(installed.Version)
+		appDetails, _ := appDetailRepo.GetBy(appDetailRepo.WithAppId(installed.App.ID))
+		for _, appDetail := range appDetails {
+			if strings.HasPrefix(appDetail.Version, majorVersion) && common.CompareVersion(appDetail.Version, installed.Version) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
 func handleInstalled(appInstallList []model.AppInstall, updated bool, sync bool) ([]response.AppInstallDTO, error) {
 	var (
 		res           []response.AppInstallDTO
@@ -1246,7 +1315,7 @@ func handleInstalled(appInstallList []model.AppInstall, updated bool, sync bool)
 	}
 
 	for _, installed := range appInstallList {
-		if updated && (installed.App.Type == "php" || installed.Status == constant.Installing || (installed.App.Key == constant.AppMysql && installed.Version == "5.6.51")) {
+		if updated && ignoreUpdate(installed) {
 			continue
 		}
 		if sync && !doNotNeedSync(installed) {
@@ -1305,6 +1374,18 @@ func handleInstalled(appInstallList []model.AppInstall, updated bool, sync bool)
 			continue
 		}
 		lastVersion := versions[0]
+		if app.Key == constant.AppMysql {
+			for _, version := range versions {
+				majorVersion := getMajorVersion(installed.Version)
+				if !strings.HasPrefix(version, majorVersion) {
+					continue
+				} else {
+					lastVersion = version
+					break
+				}
+			}
+		}
+
 		if common.IsCrossVersion(installed.Version, lastVersion) {
 			installDTO.CanUpdate = app.CrossVersionUpdate
 		} else {
@@ -1419,6 +1500,18 @@ func addDockerComposeCommonParam(composeMap map[string]interface{}, serviceName 
 	deploy["resources"] = resource
 	serviceValue["deploy"] = deploy
 
+	if req.GpuConfig {
+		resource["reservations"] = map[string]interface{}{
+			"devices": []map[string]interface{}{
+				{
+					"driver":       "nvidia",
+					"count":        "all",
+					"capabilities": []string{"gpu"},
+				},
+			},
+		}
+	}
+
 	ports, ok := serviceValue["ports"].([]interface{})
 	if ok {
 		for i, port := range ports {
@@ -1518,4 +1611,49 @@ func isHostModel(dockerCompose string) bool {
 		}
 	}
 	return false
+}
+
+func RequestDownloadCallBack(downloadCallBackUrl string) {
+	if downloadCallBackUrl == "" {
+		return
+	}
+	_, _, _ = httpUtil.HandleGet(downloadCallBackUrl, http.MethodGet, constant.TimeOut5s)
+}
+
+func getAppTags(appID uint, lang string) ([]response.TagDTO, error) {
+	appTags, err := appTagRepo.GetByAppId(appID)
+	if err != nil {
+		return nil, err
+	}
+	var tagIds []uint
+	for _, at := range appTags {
+		tagIds = append(tagIds, at.TagId)
+	}
+	tags, err := tagRepo.GetByIds(tagIds)
+	if err != nil {
+		return nil, err
+	}
+	var res []response.TagDTO
+	for _, t := range tags {
+		if t.Name != "" {
+			tagDTO := response.TagDTO{
+				ID:   t.ID,
+				Key:  t.Key,
+				Name: t.Name,
+			}
+			res = append(res, tagDTO)
+		} else {
+			var translations = make(map[string]string)
+			_ = json.Unmarshal([]byte(t.Translations), &translations)
+			if name, ok := translations[lang]; ok {
+				tagDTO := response.TagDTO{
+					ID:   t.ID,
+					Key:  t.Key,
+					Name: name,
+				}
+				res = append(res, tagDTO)
+			}
+		}
+	}
+	return res, nil
 }

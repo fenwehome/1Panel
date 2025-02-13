@@ -11,7 +11,7 @@ export namespace File {
         size: number;
         isDir: boolean;
         isSymlink: boolean;
-        linkPath: boolean;
+        linkPath: string;
         type: string;
         updateTime: string;
         modTime: string;
@@ -150,6 +150,14 @@ export namespace File {
 
     export interface FilePath {
         path: string;
+    }
+
+    export interface ExistFileInfo {
+        name: string;
+        path: string;
+        size: number;
+        uploadSize: number;
+        modTime: string;
     }
 
     export interface RecycleBin {

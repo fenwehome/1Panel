@@ -37,16 +37,23 @@ var (
 
 // api
 var (
-	ErrTypeInternalServer  = "ErrInternalServer"
-	ErrTypeInvalidParams   = "ErrInvalidParams"
-	ErrTypeNotLogin        = "ErrNotLogin"
-	ErrTypePasswordExpired = "ErrPasswordExpired"
-	ErrNameIsExist         = "ErrNameIsExist"
-	ErrDemoEnvironment     = "ErrDemoEnvironment"
-	ErrCmdIllegal          = "ErrCmdIllegal"
-	ErrXpackNotFound       = "ErrXpackNotFound"
-	ErrXpackNotActive      = "ErrXpackNotActive"
-	ErrXpackOutOfDate      = "ErrXpackOutOfDate"
+	ErrTypeInternalServer      = "ErrInternalServer"
+	ErrTypeInvalidParams       = "ErrInvalidParams"
+	ErrTypeNotLogin            = "ErrNotLogin"
+	ErrTypePasswordExpired     = "ErrPasswordExpired"
+	ErrNameIsExist             = "ErrNameIsExist"
+	ErrDemoEnvironment         = "ErrDemoEnvironment"
+	ErrCmdIllegal              = "ErrCmdIllegal"
+	ErrXpackNotFound           = "ErrXpackNotFound"
+	ErrXpackNotActive          = "ErrXpackNotActive"
+	ErrXpackLost               = "ErrXpackLost"
+	ErrXpackTimeout            = "ErrXpackTimeout"
+	ErrXpackOutOfDate          = "ErrXpackOutOfDate"
+	ErrApiConfigStatusInvalid  = "ErrApiConfigStatusInvalid"
+	ErrApiConfigKeyInvalid     = "ErrApiConfigKeyInvalid"
+	ErrApiConfigIPInvalid      = "ErrApiConfigIPInvalid"
+	ErrApiConfigDisable        = "ErrApiConfigDisable"
+	ErrApiConfigKeyTimeInvalid = "ErrApiConfigKeyTimeInvalid"
 )
 
 // app
@@ -95,11 +102,12 @@ var (
 	ErrPathNotFound     = "ErrPathNotFound"
 	ErrMovePathFailed   = "ErrMovePathFailed"
 	ErrLinkPathNotFound = "ErrLinkPathNotFound"
-	ErrFileIsExist       = "ErrFileIsExist"
+	ErrFileIsExist      = "ErrFileIsExist"
 	ErrFileUpload       = "ErrFileUpload"
 	ErrFileDownloadDir  = "ErrFileDownloadDir"
 	ErrCmdNotFound      = "ErrCmdNotFound"
 	ErrFavoriteExist    = "ErrFavoriteExist"
+	ErrPathNotDelete    = "ErrPathNotDelete"
 )
 
 // mysql
@@ -118,10 +126,11 @@ var (
 
 // container
 var (
-	ErrInUsed       = "ErrInUsed"
-	ErrObjectInUsed = "ErrObjectInUsed"
-	ErrPortRules    = "ErrPortRules"
-	ErrPgImagePull  = "ErrPgImagePull"
+	ErrInUsed            = "ErrInUsed"
+	ErrObjectInUsed      = "ErrObjectInUsed"
+	ErrObjectBeDependent = "ErrObjectBeDependent"
+	ErrPortRules         = "ErrPortRules"
+	ErrPgImagePull       = "ErrPgImagePull"
 )
 
 // runtime
@@ -143,7 +152,8 @@ var (
 )
 
 var (
-	ErrFirewall = "ErrFirewall"
+	ErrFirewallNone = "ErrFirewallNone"
+	ErrFirewallBoth = "ErrFirewallBoth"
 )
 
 // cronjob
@@ -159,6 +169,16 @@ var (
 var (
 	ErrLicense      = "ErrLicense"
 	ErrLicenseCheck = "ErrLicenseCheck"
+	ErrXpackVersion = "ErrXpackVersion"
 	ErrLicenseSave  = "ErrLicenseSave"
 	ErrLicenseSync  = "ErrLicenseSync"
+)
+
+// alert
+var (
+	ErrAlert       = "ErrAlert"
+	ErrAlertPush   = "ErrAlertPush"
+	ErrAlertSave   = "ErrAlertSave"
+	ErrAlertSync   = "ErrAlertSync"
+	ErrAlertRemote = "ErrAlertRemote"
 )

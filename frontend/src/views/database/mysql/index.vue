@@ -2,11 +2,13 @@
     <div v-loading="loading">
         <div class="app-status" style="margin-top: 20px" v-if="currentDB?.from === 'remote'">
             <el-card>
-                <div>
-                    <el-tag style="float: left" effect="dark" type="success">
-                        {{ currentDB?.type === 'mysql' ? 'Mysql' : 'MariaDB' }}
-                    </el-tag>
-                    <el-tag class="status-content">{{ $t('app.version') }}: {{ currentDB?.version }}</el-tag>
+                <div class="flex w-full flex-col gap-4 md:flex-row">
+                    <div class="flex flex-wrap gap-4">
+                        <el-tag style="float: left" effect="dark" type="success">
+                            {{ currentDB?.type === 'mysql' ? 'Mysql' : 'MariaDB' }}
+                        </el-tag>
+                        <el-tag>{{ $t('app.version') }}: {{ currentDB?.version }}</el-tag>
+                    </div>
                 </div>
             </el-card>
         </div>
@@ -19,6 +21,7 @@
                     v-model:mask-show="maskShow"
                     @setting="onSetting"
                     @is-exist="checkExist"
+                    ref="appStatusRef"
                 ></AppStatus>
             </template>
 
@@ -61,8 +64,8 @@
             </template>
 
             <template #toolbar>
-                <el-row>
-                    <el-col :xs="24" :sm="20" :md="20" :lg="20" :xl="20">
+                <div class="flex justify-between gap-2 flex-wrap sm:flex-row">
+                    <div class="flex flex-wrap gap-3">
                         <el-button
                             v-if="currentDB && (currentDB.from !== 'local' || mysqlStatus === 'Running')"
                             type="primary"
@@ -82,29 +85,31 @@
                             {{ $t('database.loadFromRemote') }}
                         </el-button>
                         <el-button @click="goRemoteDB" type="primary" plain>
-                            {{ $t('database.remoteDB') }}
+                            {{ $t('database.manageRemoteDB') }}
                         </el-button>
-                        <el-dropdown class="ml-3">
-                            <el-button type="primary" plain>
-                                {{ $t('database.manage') }}
-                                <el-icon class="el-icon--right"><arrow-down /></el-icon>
-                            </el-button>
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item icon="Position" @click="goDashboard('phpMyAdmin')">
-                                        phpMyAdmin
-                                    </el-dropdown-item>
-                                    <el-dropdown-item icon="Position" @click="goDashboard('Adminer')" divided>
-                                        Adminer
-                                    </el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
-                    </el-col>
-                    <el-col :xs="24" :sm="4" :md="4" :lg="4" :xl="4">
+                        <div>
+                            <el-dropdown>
+                                <el-button type="primary" plain>
+                                    {{ $t('database.manage') }}
+                                    <el-icon class="el-icon--right"><arrow-down /></el-icon>
+                                </el-button>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item icon="Position" @click="goDashboard('phpMyAdmin')">
+                                            phpMyAdmin
+                                        </el-dropdown-item>
+                                        <el-dropdown-item icon="Position" @click="goDashboard('Adminer')" divided>
+                                            Adminer
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                    </div>
+                    <div>
                         <TableSearch @search="search()" v-model:searchName="searchName" />
-                    </el-col>
-                </el-row>
+                    </div>
+                </div>
             </template>
             <template #main v-if="currentDB">
                 <ComplexTable
@@ -201,10 +206,11 @@
                         show-overflow-tooltip
                     />
                     <fu-table-operations
-                        width="370px"
+                        :ellipsis="mobile ? 0 : 10"
+                        :min-width="mobile ? 'auto' : 400"
                         :buttons="buttons"
-                        :ellipsis="10"
                         :label="$t('commons.table.operate')"
+                        fixed="right"
                         fix
                     />
                 </ComplexTable>
@@ -221,18 +227,18 @@
         </el-card>
 
         <div v-if="dbOptionsLocal.length === 0 && dbOptionsRemote.length === 0">
-            <LayoutContent :title="'MySQL ' + $t('menu.database')" :divider="true">
+            <LayoutContent :title="'MySQL ' + $t('menu.database').toLowerCase()" :divider="true">
                 <template #main>
                     <div class="app-warn">
-                        <div>
+                        <div class="flex flex-col gap-2 items-center justify-center w-full sm:flex-row">
                             <span>{{ $t('app.checkInstalledWarn', [$t('database.noMysql')]) }}</span>
-                            <span @click="goRouter('app')">
-                                <el-icon class="ml-2"><Position /></el-icon>
+                            <span @click="goRouter('app')" class="flex items-center justify-center gap-0.5">
+                                <el-icon><Position /></el-icon>
                                 {{ $t('database.goInstall') }}
                             </span>
-                            <div>
-                                <img src="@/assets/images/no_app.svg" />
-                            </div>
+                        </div>
+                        <div>
+                            <img src="@/assets/images/no_app.svg" />
                         </div>
                     </div>
                 </template>
@@ -246,11 +252,12 @@
             :close-on-click-modal="false"
             :destroy-on-close="true"
         >
-            <el-alert :closable="false" :title="$t('app.checkInstalledWarn', [dashboardName])" type="info">
+            <div class="flex justify-center items-center gap-2 flex-wrap">
+                {{ $t('app.checkInstalledWarn', [dashboardName]) }}
                 <el-link icon="Position" @click="getAppDetail" type="primary">
                     {{ $t('database.goInstall') }}
                 </el-link>
-            </el-alert>
+            </div>
             <template #footer>
                 <span class="dialog-footer">
                     <el-button @click="dashboardVisible = false">{{ $t('commons.button.cancel') }}</el-button>
@@ -285,7 +292,7 @@ import UploadDialog from '@/components/upload/index.vue';
 import PortJumpDialog from '@/components/port-jump/index.vue';
 import { dateFormat } from '@/utils/util';
 import { ElMessageBox } from 'element-plus';
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import {
     deleteCheckMysqlDB,
     listDatabases,
@@ -322,6 +329,8 @@ const adminerPort = ref();
 const dashboardName = ref();
 const dashboardKey = ref();
 const dashboardVisible = ref(false);
+
+const appStatusRef = ref();
 
 const dialogPortJumpRef = ref();
 
@@ -363,6 +372,10 @@ const onChangeConn = async () => {
     });
 };
 
+const mobile = computed(() => {
+    return globalStore.isMobile();
+});
+
 const goRemoteDB = async () => {
     if (currentDB.value) {
         globalStore.setCurrentDB(currentDB.value.database);
@@ -386,6 +399,7 @@ const changeDatabase = async () => {
             appKey.value = item.type;
             appName.value = item.database;
             search();
+            appStatusRef.value?.onCheck(appKey.value, appName.value);
             return;
         }
     }

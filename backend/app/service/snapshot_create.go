@@ -50,6 +50,7 @@ func snapPanel(snap snapHelper, targetDir string) {
 	if err := common.CopyFile("/usr/local/bin/1pctl", targetDir); err != nil {
 		status = err.Error()
 	}
+	_, _ = cmd.Execf("cp -r /usr/local/bin/lang %s", targetDir)
 
 	if err := common.CopyFile("/etc/systemd/system/1panel.service", targetDir); err != nil {
 		status = err.Error()
@@ -231,7 +232,6 @@ func handleSnapTar(sourceDir, targetDir, name, exclusionRules string, secret str
 	exMap := make(map[string]struct{})
 	exStr := ""
 	excludes := strings.Split(exclusionRules, ";")
-	excludes = append(excludes, "*.sock")
 	for _, exclude := range excludes {
 		if len(exclude) == 0 {
 			continue
@@ -257,10 +257,10 @@ func handleSnapTar(sourceDir, targetDir, name, exclusionRules string, secret str
 	commands := ""
 	if len(secret) != 0 {
 		extraCmd := "| openssl enc -aes-256-cbc -salt -k '" + secret + "' -out"
-		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read -zcf %s %s %s %s", " -"+exStr, path, extraCmd, targetDir+"/"+name)
+		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read --exclude-from=<(find %s -type s -print) -zcf %s %s %s %s", sourceDir, " -"+exStr, path, extraCmd, targetDir+"/"+name)
 		global.LOG.Debug(strings.ReplaceAll(commands, fmt.Sprintf(" %s ", secret), "******"))
 	} else {
-		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read -zcf %s %s -C %s .", targetDir+"/"+name, exStr, sourceDir)
+		commands = fmt.Sprintf("tar --warning=no-file-changed --ignore-failed-read --exclude-from=<(find %s -type s -printf '%s' | sed 's|^|./|') -zcf %s %s -C %s .", sourceDir, "%P\n", targetDir+"/"+name, exStr, sourceDir)
 		global.LOG.Debug(commands)
 	}
 	stdout, err := cmd.ExecWithTimeOut(commands, 30*time.Minute)

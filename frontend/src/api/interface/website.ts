@@ -31,6 +31,7 @@ export namespace Website {
         sitePath: string;
         appName: string;
         runtimeName: string;
+        runtimeType: string;
     }
     export interface WebsiteRes extends CommonModel {
         protocol: string;
@@ -355,6 +356,11 @@ export namespace Website {
         id: number;
     }
 
+    export interface ProxyDel {
+        id: number;
+        name: string;
+    }
+
     export interface ProxyConfig {
         id: number;
         operate: string;
@@ -372,6 +378,8 @@ export namespace Website {
         content?: string;
         proxyAddress?: string;
         proxyProtocol?: string;
+        sni: boolean;
+        proxySSLName: string;
     }
 
     export interface ProxReplace {

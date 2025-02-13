@@ -28,6 +28,46 @@ definitions:
       oldRule:
         $ref: '#/definitions/dto.AddrRuleOperate'
     type: object
+  dto.ApiInterfaceConfig:
+    properties:
+      apiInterfaceStatus:
+        type: string
+      apiKey:
+        type: string
+      apiKeyValidityTime:
+        type: string
+      ipWhiteList:
+        type: string
+    type: object
+  dto.AppConfigVersion:
+    properties:
+      additionalProperties: {}
+      downloadCallBackUrl:
+        type: string
+      downloadUrl:
+        type: string
+      lastModified:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.AppDefine:
+    properties:
+      additionalProperties:
+        $ref: '#/definitions/dto.AppProperty'
+      icon:
+        type: string
+      lastModified:
+        type: integer
+      name:
+        type: string
+      readMe:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/dto.AppConfigVersion'
+        type: array
+    type: object
   dto.AppInstallInfo:
     properties:
       id:
@@ -35,6 +75,60 @@ definitions:
       key:
         type: string
       name:
+        type: string
+    type: object
+  dto.AppList:
+    properties:
+      additionalProperties:
+        $ref: '#/definitions/dto.ExtraProperties'
+      apps:
+        items:
+          $ref: '#/definitions/dto.AppDefine'
+        type: array
+      lastModified:
+        type: integer
+      valid:
+        type: boolean
+      violations:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.AppProperty:
+    properties:
+      Required:
+        items:
+          type: string
+        type: array
+      crossVersionUpdate:
+        type: boolean
+      description:
+        $ref: '#/definitions/dto.Locale'
+      document:
+        type: string
+      github:
+        type: string
+      key:
+        type: string
+      limit:
+        type: integer
+      name:
+        type: string
+      recommend:
+        type: integer
+      shortDescEn:
+        type: string
+      shortDescZh:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      version:
+        type: number
+      website:
         type: string
     type: object
   dto.AppResource:
@@ -52,6 +146,15 @@ definitions:
         type: string
       version:
         type: string
+    type: object
+  dto.BackupFile:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      size:
+        type: integer
     type: object
   dto.BackupInfo:
     properties:
@@ -233,6 +336,10 @@ definitions:
     type: object
   dto.ClamCreate:
     properties:
+      alertCount:
+        type: integer
+      alertTitle:
+        type: string
       description:
         type: string
       infectedDir:
@@ -297,6 +404,10 @@ definitions:
     type: object
   dto.ClamUpdate:
     properties:
+      alertCount:
+        type: integer
+      alertTitle:
+        type: string
       description:
         type: string
       id:
@@ -328,6 +439,29 @@ definitions:
       treeType:
         type: string
     type: object
+  dto.CleanData:
+    properties:
+      containerClean:
+        items:
+          $ref: '#/definitions/dto.CleanTree'
+        type: array
+      downloadClean:
+        items:
+          $ref: '#/definitions/dto.CleanTree'
+        type: array
+      systemClean:
+        items:
+          $ref: '#/definitions/dto.CleanTree'
+        type: array
+      systemLogClean:
+        items:
+          $ref: '#/definitions/dto.CleanTree'
+        type: array
+      uploadClean:
+        items:
+          $ref: '#/definitions/dto.CleanTree'
+        type: array
+    type: object
   dto.CleanLog:
     properties:
       logType:
@@ -337,6 +471,27 @@ definitions:
         type: string
     required:
     - logType
+    type: object
+  dto.CleanTree:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/dto.CleanTree'
+        type: array
+      id:
+        type: string
+      isCheck:
+        type: boolean
+      isRecommend:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+      type:
+        type: string
     type: object
   dto.CommandInfo:
     properties:
@@ -367,9 +522,22 @@ definitions:
     - command
     - name
     type: object
+  dto.CommandTree:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/dto.CommandInfo'
+        type: array
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   dto.CommonBackup:
     properties:
       detailName:
+        type: string
+      fileName:
         type: string
       name:
         type: string
@@ -424,6 +592,10 @@ definitions:
     type: object
   dto.ComposeCreate:
     properties:
+      env:
+        items:
+          type: string
+        type: array
       file:
         type: string
       from:
@@ -447,9 +619,11 @@ definitions:
         type: string
       operation:
         enum:
+        - up
         - start
         - stop
         - down
+        - delete
         type: string
       path:
         type: string
@@ -458,7 +632,6 @@ definitions:
     required:
     - name
     - operation
-    - path
     type: object
   dto.ComposeTemplateCreate:
     properties:
@@ -497,6 +670,10 @@ definitions:
     properties:
       content:
         type: string
+      env:
+        items:
+          type: string
+        type: array
       name:
         type: string
       path:
@@ -543,6 +720,19 @@ definitions:
         type: integer
       systemUsage:
         type: integer
+    type: object
+  dto.ContainerLog:
+    properties:
+      container:
+        type: string
+      containerType:
+        type: string
+      since:
+        type: string
+      tail:
+        type: integer
+    required:
+    - container
     type: object
   dto.ContainerOperate:
     properties:
@@ -614,6 +804,7 @@ definitions:
         type: array
       operation:
         enum:
+        - up
         - start
         - stop
         - restart
@@ -713,6 +904,10 @@ definitions:
     type: object
   dto.CronjobCreate:
     properties:
+      alertCount:
+        type: integer
+      alertTitle:
+        type: string
       appID:
         type: string
       backupAccounts:
@@ -765,6 +960,10 @@ definitions:
     type: object
   dto.CronjobUpdate:
     properties:
+      alertCount:
+        type: integer
+      alertTitle:
+        type: string
       appID:
         type: string
       backupAccounts:
@@ -796,6 +995,8 @@ definitions:
         type: string
       spec:
         type: string
+      type:
+        type: string
       url:
         type: string
       website:
@@ -804,6 +1005,7 @@ definitions:
     - id
     - name
     - spec
+    - type
     type: object
   dto.CronjobUpdateStatus:
     properties:
@@ -883,6 +1085,8 @@ definitions:
     type: object
   dto.DashboardBase:
     properties:
+      SystemProxy:
+        type: string
       appInstalledNumber:
         type: integer
       cpuCores:
@@ -898,6 +1102,8 @@ definitions:
       databaseNumber:
         type: integer
       hostname:
+        type: string
+      ipv4Addr:
         type: string
       kernelArch:
         type: string
@@ -982,6 +1188,19 @@ definitions:
         type: string
       uptime:
         type: integer
+      xpuData:
+        items:
+          $ref: '#/definitions/dto.XPUInfo'
+        type: array
+    type: object
+  dto.DashboardReq:
+    properties:
+      ioOption:
+        type: string
+      netOption:
+        type: string
+      scope:
+        type: string
     type: object
   dto.DatabaseCreate:
     properties:
@@ -1249,6 +1468,15 @@ definitions:
     - fileName
     - source
     type: object
+  dto.ExtraProperties:
+    properties:
+      tags:
+        items:
+          $ref: '#/definitions/dto.Tag'
+        type: array
+      version:
+        type: string
+    type: object
   dto.Fail2BanBaseInfo:
     properties:
       banAction:
@@ -1292,7 +1520,6 @@ definitions:
         - maxretry
         - banaction
         - logpath
-        - port
         type: string
       value:
         type: string
@@ -1551,6 +1778,37 @@ definitions:
       ip:
         type: string
     type: object
+  dto.HostInfo:
+    properties:
+      addr:
+        type: string
+      authMode:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      groupBelong:
+        type: string
+      groupID:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      passPhrase:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+      privateKey:
+        type: string
+      rememberPassword:
+        type: boolean
+      user:
+        type: string
+    type: object
   dto.HostOperate:
     properties:
       addr:
@@ -1727,6 +1985,23 @@ definitions:
     - id
     - type
     type: object
+  dto.Locale:
+    properties:
+      en:
+        type: string
+      ja:
+        type: string
+      ms:
+        type: string
+      pt-br:
+        type: string
+      ru:
+        type: string
+      zh:
+        type: string
+      zh-hant:
+        type: string
+    type: object
   dto.LogOption:
     properties:
       logMaxFile:
@@ -1752,6 +2027,11 @@ definitions:
         - zh
         - en
         - tw
+        - ja
+        - ko
+        - ru
+        - ms
+        - pt-BR
         type: string
       name:
         type: string
@@ -1790,6 +2070,26 @@ definitions:
     - code
     - interval
     - secret
+    type: object
+  dto.MonitorData:
+    properties:
+      date:
+        items:
+          type: string
+        type: array
+      param:
+        enum:
+        - cpu
+        - memory
+        - load
+        - io
+        - network
+        type: string
+      value:
+        items: {}
+        type: array
+    required:
+    - param
     type: object
   dto.MonitorSearch:
     properties:
@@ -2119,6 +2419,13 @@ definitions:
     - driver
     - name
     type: object
+  dto.NginxAuth:
+    properties:
+      remark:
+        type: string
+      username:
+        type: string
+    type: object
   dto.NginxKey:
     enum:
     - index
@@ -2277,6 +2584,31 @@ definitions:
       items: {}
       total:
         type: integer
+    type: object
+  dto.PageSnapshot:
+    properties:
+      info:
+        type: string
+      order:
+        enum:
+        - "null"
+        - ascending
+        - descending
+        type: string
+      orderBy:
+        enum:
+        - name
+        - created_at
+        type: string
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    required:
+    - order
+    - orderBy
+    - page
+    - pageSize
     type: object
   dto.PasswordUpdate:
     properties:
@@ -2721,8 +3053,25 @@ definitions:
     required:
     - key
     type: object
+  dto.SSLInfo:
+    properties:
+      cert:
+        type: string
+      domain:
+        type: string
+      key:
+        type: string
+      rootPath:
+        type: string
+      sslID:
+        type: integer
+      timeout:
+        type: string
+    type: object
   dto.SSLUpdate:
     properties:
+      autoRestart:
+        type: string
       cert:
         type: string
       domain:
@@ -2876,11 +3225,19 @@ definitions:
     properties:
       allowIPs:
         type: string
+      apiInterfaceStatus:
+        type: string
+      apiKey:
+        type: string
+      apiKeyValidityTime:
+        type: string
       appStoreLastModified:
         type: string
       appStoreSyncStatus:
         type: string
       appStoreVersion:
+        type: string
+      autoRestart:
         type: string
       bindAddress:
         type: string
@@ -2905,6 +3262,8 @@ definitions:
       expirationTime:
         type: string
       fileRecycleBin:
+        type: string
+      ipWhiteList:
         type: string
       ipv6:
         type: string
@@ -3018,6 +3377,15 @@ definitions:
     - defaultDownload
     - from
     type: object
+  dto.SnapshotFile:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   dto.SnapshotImport:
     properties:
       description:
@@ -3043,6 +3411,27 @@ definitions:
     required:
     - id
     type: object
+  dto.SnapshotStatus:
+    properties:
+      appData:
+        type: string
+      backupData:
+        type: string
+      compress:
+        type: string
+      daemonJson:
+        type: string
+      panel:
+        type: string
+      panelData:
+        type: string
+      panelInfo:
+        type: string
+      size:
+        type: string
+      upload:
+        type: string
+    type: object
   dto.SwapHelper:
     properties:
       isNew:
@@ -3055,6 +3444,17 @@ definitions:
         type: string
     required:
     - path
+    type: object
+  dto.Tag:
+    properties:
+      key:
+        type: string
+      locales:
+        $ref: '#/definitions/dto.Locale'
+      name:
+        type: string
+      sort:
+        type: integer
     type: object
   dto.TreeChild:
     properties:
@@ -3161,6 +3561,23 @@ definitions:
       type:
         type: string
     type: object
+  dto.XPUInfo:
+    properties:
+      deviceID:
+        type: integer
+      deviceName:
+        type: string
+      memory:
+        type: string
+      memoryUsed:
+        type: string
+      memoryUtil:
+        type: string
+      power:
+        type: string
+      temperature:
+        type: string
+    type: object
   files.FileInfo:
     properties:
       content:
@@ -3223,6 +3640,8 @@ definitions:
         type: string
       crossVersionUpdate:
         type: boolean
+      description:
+        type: string
       document:
         type: string
       github:
@@ -3303,6 +3722,62 @@ definitions:
       version:
         type: string
     type: object
+  model.Favorite:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      isDir:
+        type: boolean
+      isTxt:
+        type: boolean
+      name:
+        type: string
+      path:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Runtime:
+    properties:
+      appDetailId:
+        type: integer
+      codeDir:
+        type: string
+      createdAt:
+        type: string
+      dockerCompose:
+        type: string
+      env:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      params:
+        type: string
+      port:
+        type: integer
+      resource:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      version:
+        type: string
+      workDir:
+        type: string
+    type: object
   model.Tag:
     properties:
       createdAt:
@@ -3315,6 +3790,8 @@ definitions:
         type: string
       sort:
         type: integer
+      translations:
+        type: string
       updatedAt:
         type: string
     type: object
@@ -4836,6 +5313,8 @@ definitions:
         type: string
       proxyPass:
         type: string
+      proxySSLName:
+        type: string
       replaces:
         additionalProperties:
           type: string
@@ -4849,6 +5328,16 @@ definitions:
     - operate
     - proxyHost
     - proxyPass
+    type: object
+  request.WebsiteProxyDel:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    required:
+    - id
+    - name
     type: object
   request.WebsiteProxyReq:
     properties:
@@ -4868,6 +5357,8 @@ definitions:
     properties:
       ID:
         type: integer
+      disableLog:
+        type: boolean
       nameservers:
         items:
           type: string
@@ -5068,12 +5559,41 @@ definitions:
     - id
     - user
     type: object
+  response.AppConfig:
+    properties:
+      advanced:
+        type: boolean
+      allowPort:
+        type: boolean
+      containerName:
+        type: string
+      cpuQuota:
+        type: number
+      dockerCompose:
+        type: string
+      editCompose:
+        type: boolean
+      hostMode:
+        type: boolean
+      memoryLimit:
+        type: number
+      memoryUnit:
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/response.AppParam'
+        type: array
+      pullImage:
+        type: boolean
+    type: object
   response.AppDTO:
     properties:
       createdAt:
         type: string
       crossVersionUpdate:
         type: boolean
+      description:
+        type: string
       document:
         type: string
       github:
@@ -5184,6 +5704,37 @@ definitions:
       version:
         type: string
     type: object
+  response.AppItem:
+    properties:
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      installed:
+        type: boolean
+      key:
+        type: string
+      limit:
+        type: integer
+      name:
+        type: string
+      resource:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/response.TagDTO'
+        type: array
+      type:
+        type: string
+      versions:
+        items:
+          type: string
+        type: array
+    type: object
   response.AppParam:
     properties:
       edit:
@@ -5207,6 +5758,15 @@ definitions:
       value: {}
       values: {}
     type: object
+  response.AppRes:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/response.AppItem'
+        type: array
+      total:
+        type: integer
+    type: object
   response.AppService:
     properties:
       config: {}
@@ -5216,6 +5776,39 @@ definitions:
         type: string
       value:
         type: string
+    type: object
+  response.AppUpdateRes:
+    properties:
+      appList:
+        $ref: '#/definitions/dto.AppList'
+      appStoreLastModified:
+        type: integer
+      canUpdate:
+        type: boolean
+      isSyncing:
+        type: boolean
+    type: object
+  response.DatabaseConn:
+    properties:
+      containerName:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+      serviceName:
+        type: string
+      status:
+        type: string
+      username:
+        type: string
+    type: object
+  response.DirSizeRes:
+    properties:
+      size:
+        type: number
+    required:
+    - size
     type: object
   response.FileInfo:
     properties:
@@ -5266,6 +5859,21 @@ definitions:
       user:
         type: string
     type: object
+  response.FileLineContent:
+    properties:
+      content:
+        type: string
+      end:
+        type: boolean
+      lines:
+        items:
+          type: string
+        type: array
+      path:
+        type: string
+      total:
+        type: integer
+    type: object
   response.FileTree:
     properties:
       children:
@@ -5283,6 +5891,22 @@ definitions:
       path:
         type: string
     type: object
+  response.FileWgetRes:
+    properties:
+      key:
+        type: string
+    type: object
+  response.HostToolConfig:
+    properties:
+      content:
+        type: string
+    type: object
+  response.HostToolRes:
+    properties:
+      config: {}
+      type:
+        type: string
+    type: object
   response.IgnoredApp:
     properties:
       detailID:
@@ -5294,6 +5918,45 @@ definitions:
       version:
         type: string
     type: object
+  response.NginxAntiLeechRes:
+    properties:
+      blocked:
+        type: boolean
+      cache:
+        type: boolean
+      cacheTime:
+        type: integer
+      cacheUint:
+        type: string
+      enable:
+        type: boolean
+      extends:
+        type: string
+      logEnable:
+        type: boolean
+      noneRef:
+        type: boolean
+      return:
+        type: string
+      serverNames:
+        items:
+          type: string
+        type: array
+    type: object
+  response.NginxAuthRes:
+    properties:
+      enable:
+        type: boolean
+      items:
+        items:
+          $ref: '#/definitions/dto.NginxAuth'
+        type: array
+    type: object
+  response.NginxFile:
+    properties:
+      content:
+        type: string
+    type: object
   response.NginxParam:
     properties:
       name:
@@ -5302,6 +5965,40 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  response.NginxRedirectConfig:
+    properties:
+      content:
+        type: string
+      domains:
+        items:
+          type: string
+        type: array
+      enable:
+        type: boolean
+      filePath:
+        type: string
+      keepPath:
+        type: boolean
+      name:
+        type: string
+      path:
+        type: string
+      redirect:
+        type: string
+      redirectRoot:
+        type: boolean
+      target:
+        type: string
+      type:
+        type: string
+      websiteID:
+        type: integer
+    type: object
+  response.NginxRewriteRes:
+    properties:
+      content:
+        type: string
     type: object
   response.NginxStatus:
     properties:
@@ -5320,6 +6017,17 @@ definitions:
       writing:
         type: string
     type: object
+  response.NodeModule:
+    properties:
+      description:
+        type: string
+      license:
+        type: string
+      name:
+        type: string
+      version:
+        type: string
+    type: object
   response.PHPConfig:
     properties:
       disableFunctions:
@@ -5333,17 +6041,96 @@ definitions:
       uploadMaxSize:
         type: string
     type: object
-  response.PHPExtensionsDTO:
+  response.PackageScripts:
     properties:
-      createdAt:
-        type: string
-      extensions:
-        type: string
-      id:
-        type: integer
       name:
         type: string
-      updatedAt:
+      script:
+        type: string
+    type: object
+  response.ProcessStatus:
+    properties:
+      PID:
+        type: string
+      msg:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      uptime:
+        type: string
+    type: object
+  response.RuntimeDTO:
+    properties:
+      appDetailID:
+        type: integer
+      appID:
+        type: integer
+      appParams:
+        items:
+          $ref: '#/definitions/response.AppParam'
+        type: array
+      codeDir:
+        type: string
+      createdAt:
+        type: string
+      exposedPorts:
+        items:
+          $ref: '#/definitions/request.ExposedPort'
+        type: array
+      id:
+        type: integer
+      image:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      params:
+        additionalProperties: true
+        type: object
+      path:
+        type: string
+      port:
+        type: integer
+      resource:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      version:
+        type: string
+    type: object
+  response.SupervisorProcessConfig:
+    properties:
+      command:
+        type: string
+      dir:
+        type: string
+      msg:
+        type: string
+      name:
+        type: string
+      numprocs:
+        type: string
+      status:
+        items:
+          $ref: '#/definitions/response.ProcessStatus'
+        type: array
+      user:
+        type: string
+    type: object
+  response.TagDTO:
+    properties:
+      id:
+        type: integer
+      key:
+        type: string
+      name:
         type: string
     type: object
   response.WebsiteAcmeAccountDTO:
@@ -5478,6 +6265,19 @@ definitions:
       webSiteSSLId:
         type: integer
     type: object
+  response.WebsiteDirConfig:
+    properties:
+      dirs:
+        items:
+          type: string
+        type: array
+      msg:
+        type: string
+      user:
+        type: string
+      userGroup:
+        type: string
+    type: object
   response.WebsiteHTTPS:
     properties:
       SSL:
@@ -5493,6 +6293,11 @@ definitions:
       hsts:
         type: boolean
       httpConfig:
+        type: string
+    type: object
+  response.WebsiteHtmlRes:
+    properties:
+      content:
         type: string
     type: object
   response.WebsiteLog:
@@ -5515,6 +6320,15 @@ definitions:
           $ref: '#/definitions/response.NginxParam'
         type: array
     type: object
+  response.WebsiteOption:
+    properties:
+      alias:
+        type: string
+      id:
+        type: integer
+      primaryDomain:
+        type: string
+    type: object
   response.WebsitePreInstallCheck:
     properties:
       appName:
@@ -5526,22 +6340,91 @@ definitions:
       version:
         type: string
     type: object
-host: localhost
+  response.WebsiteSSLDTO:
+    properties:
+      acmeAccount:
+        $ref: '#/definitions/model.WebsiteAcmeAccount'
+      acmeAccountId:
+        type: integer
+      autoRenew:
+        type: boolean
+      caId:
+        type: integer
+      certURL:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      dir:
+        type: string
+      disableCNAME:
+        type: boolean
+      dnsAccount:
+        $ref: '#/definitions/model.WebsiteDnsAccount'
+      dnsAccountId:
+        type: integer
+      domains:
+        type: string
+      execShell:
+        type: boolean
+      expireDate:
+        type: string
+      id:
+        type: integer
+      keyType:
+        type: string
+      logPath:
+        type: string
+      message:
+        type: string
+      nameserver1:
+        type: string
+      nameserver2:
+        type: string
+      organization:
+        type: string
+      pem:
+        type: string
+      primaryDomain:
+        type: string
+      privateKey:
+        type: string
+      provider:
+        type: string
+      pushDir:
+        type: boolean
+      shell:
+        type: string
+      skipDNS:
+        type: boolean
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      websites:
+        items:
+          $ref: '#/definitions/model.Website'
+        type: array
+    type: object
 info:
   contact: {}
-  description: 开源Linux面板
+  description: Top-Rated Web-based Linux Server Management Tool
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    name: GPL-3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.html
   termsOfService: http://swagger.io/terms/
   title: 1Panel
   version: "1.0"
 paths:
-  /apps/:key:
+  /apps/{key}:
     get:
       consumes:
       - application/json
-      description: 通过 key 获取应用信息
       parameters:
       - description: app key
         in: path
@@ -5555,39 +6438,41 @@ paths:
             $ref: '#/definitions/response.AppDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search app by key
       tags:
       - App
   /apps/checkupdate:
     get:
-      description: 获取应用更新版本
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.AppUpdateRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get app list update
       tags:
       - App
-  /apps/detail/:appId/:version/:type:
+  /apps/detail/{appId}/{version}/{type}:
     get:
       consumes:
       - application/json
-      description: 通过 appid 获取应用详情
       parameters:
       - description: app id
         in: path
         name: appId
         required: true
         type: integer
-      - description: app 版本
+      - description: app version
         in: path
         name: version
         required: true
         type: string
-      - description: app 类型
+      - description: app type
         in: path
-        name: version
+        name: type
         required: true
         type: string
       responses:
@@ -5597,18 +6482,18 @@ paths:
             $ref: '#/definitions/response.AppDetailDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search app detail by appid
       tags:
       - App
-  /apps/details/:id:
+  /apps/details/{id}:
     get:
       consumes:
       - application/json
-      description: 通过 id 获取应用详情
       parameters:
       - description: id
         in: path
-        name: appId
+        name: id
         required: true
         type: integer
       responses:
@@ -5618,6 +6503,7 @@ paths:
             $ref: '#/definitions/response.AppDetailDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get app detail by id
       tags:
       - App
@@ -5625,7 +6511,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取忽略的应用版本
       responses:
         "200":
           description: OK
@@ -5633,6 +6518,7 @@ paths:
             $ref: '#/definitions/response.IgnoredApp'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get Ignore App
       tags:
       - App
@@ -5640,7 +6526,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 安装应用
       parameters:
       - description: request
         in: body
@@ -5655,6 +6540,7 @@ paths:
             $ref: '#/definitions/model.AppInstall'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Install app
       tags:
       - App
@@ -5669,7 +6555,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 检查应用安装情况
       parameters:
       - description: request
         in: body
@@ -5684,6 +6569,7 @@ paths:
             $ref: '#/definitions/response.AppInstalledCheck'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check app installed
       tags:
       - App
@@ -5691,7 +6577,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 通过 key 获取应用默认配置
       parameters:
       - description: request
         in: body
@@ -5706,14 +6591,14 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search default config by key
       tags:
       - App
-  /apps/installed/conninfo/:key:
+  /apps/installed/conninfo/{key}:
     get:
       consumes:
       - application/json
-      description: 获取应用连接信息
       parameters:
       - description: request
         in: body
@@ -5721,21 +6606,26 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.OperationWithNameAndType'
+      - description: key
+        in: path
+        name: key
+        required: true
+        type: string
       responses:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/response.DatabaseConn'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search app password by key
       tags:
       - App
-  /apps/installed/delete/check/:appInstallId:
+  /apps/installed/delete/check/{appInstallId}:
     get:
       consumes:
       - application/json
-      description: 删除前检查
       parameters:
       - description: App install id
         in: path
@@ -5751,6 +6641,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check before delete
       tags:
       - App
@@ -5758,7 +6649,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 忽略应用升级版本
       parameters:
       - description: request
         in: body
@@ -5771,6 +6661,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: ignore App Update
       tags:
       - App
@@ -5785,7 +6676,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取已安装应用列表
       responses:
         "200":
           description: OK
@@ -5795,6 +6685,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List app installed
       tags:
       - App
@@ -5802,7 +6693,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取应用端口
       parameters:
       - description: request
         in: body
@@ -5817,6 +6707,7 @@ paths:
             type: integer
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search app port by key
       tags:
       - App
@@ -5824,7 +6715,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作已安装应用
       parameters:
       - description: request
         in: body
@@ -5837,6 +6727,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate installed app
       tags:
       - App
@@ -5866,11 +6757,10 @@ paths:
         formatEN: '[operate] App [appKey][appName]'
         formatZH: '[operate] 应用 [appKey][appName]'
         paramKeys: []
-  /apps/installed/params/:appInstallId:
+  /apps/installed/params/{appInstallId}:
     get:
       consumes:
       - application/json
-      description: 通过 install id 获取应用参数
       parameters:
       - description: request
         in: path
@@ -5881,9 +6771,10 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.AppParam'
+            $ref: '#/definitions/response.AppConfig'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search params by appInstallId
       tags:
       - App
@@ -5891,7 +6782,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改应用参数
       parameters:
       - description: request
         in: body
@@ -5904,6 +6794,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change app params
       tags:
       - App
@@ -5918,7 +6809,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改应用端口
       parameters:
       - description: request
         in: body
@@ -5931,6 +6821,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change app port
       tags:
       - App
@@ -5947,7 +6838,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 分页获取已安装应用列表
       parameters:
       - description: request
         in: body
@@ -5958,19 +6848,22 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page app installed
       tags:
       - App
   /apps/installed/sync:
     post:
-      description: 同步已安装应用列表
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Sync app installed
       tags:
       - App
@@ -5984,13 +6877,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 通过 install id 获取应用更新版本
-      parameters:
-      - description: request
-        in: path
-        name: appInstallId
-        required: true
-        type: integer
       responses:
         "200":
           description: OK
@@ -6000,6 +6886,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search app update version by install id
       tags:
       - App
@@ -6007,7 +6894,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取应用列表
       parameters:
       - description: request
         in: body
@@ -6018,16 +6904,18 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.AppRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List apps
       tags:
       - App
-  /apps/services/:key:
+  /apps/services/{key}:
     get:
       consumes:
       - application/json
-      description: 通过 key 获取应用 service
       parameters:
       - description: request
         in: path
@@ -6043,17 +6931,18 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search app service by key
       tags:
       - App
   /apps/sync:
     post:
-      description: 同步应用列表
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Sync app list
       tags:
       - App
@@ -6065,7 +6954,6 @@ paths:
         paramKeys: []
   /auth/captcha:
     get:
-      description: 加载验证码
       responses:
         "200":
           description: OK
@@ -6076,28 +6964,31 @@ paths:
       - Auth
   /auth/demo:
     get:
-      description: 判断是否为demo环境
       responses:
         "200":
           description: OK
+          schema:
+            type: boolean
       summary: Check System isDemo
       tags:
       - Auth
-  /auth/issafety:
+  /auth/intl:
     get:
-      description: 获取系统安全登录状态
       responses:
         "200":
           description: OK
-      summary: Load safety status
+          schema:
+            type: boolean
+      summary: Check System isIntl
       tags:
       - Auth
   /auth/language:
     get:
-      description: 获取系统语言设置
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       summary: Load System Language
       tags:
       - Auth
@@ -6105,9 +6996,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: 用户登录
       parameters:
-      - description: 安全入口 base64 加密串
+      - description: Secure entrance base64 encrypted string
         in: header
         name: EntranceCode
         required: true
@@ -6128,12 +7018,12 @@ paths:
       - Auth
   /auth/logout:
     post:
-      description: 用户登出
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: User logout
       tags:
       - Auth
@@ -6141,7 +7031,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 用户 mfa 登录
       parameters:
       - description: request
         in: body
@@ -6154,7 +7043,6 @@ paths:
           description: OK
           headers:
             EntranceCode:
-              description: 安全入口
               type: string
           schema:
             $ref: '#/definitions/dto.UserLoginInfo'
@@ -6165,7 +7053,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建容器
       parameters:
       - description: request
         in: body
@@ -6178,6 +7065,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create container
       tags:
       - Container
@@ -6193,7 +7081,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 清理容器日志
       parameters:
       - description: request
         in: body
@@ -6206,6 +7093,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean container log
       tags:
       - Container
@@ -6220,7 +7108,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 容器提交生成新镜像
       parameters:
       - description: request
         in: body
@@ -6238,7 +7125,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建容器编排
       parameters:
       - description: request
         in: body
@@ -6249,8 +7135,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create compose
       tags:
       - Container Compose
@@ -6265,7 +7154,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 容器编排操作
       parameters:
       - description: request
         in: body
@@ -6278,6 +7166,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate compose
       tags:
       - Container Compose
@@ -6293,7 +7182,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取编排列表分页
       parameters:
       - description: request
         in: body
@@ -6308,32 +7196,35 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page composes
       tags:
       - Container Compose
   /containers/compose/search/log:
     get:
-      description: docker-compose 日志
       parameters:
-      - description: compose 文件地址
+      - description: compose file address
         in: query
         name: compose
         type: string
-      - description: 时间筛选
+      - description: date
         in: query
         name: since
         type: string
-      - description: 是否追踪
+      - description: follow
         in: query
         name: follow
         type: string
-      - description: 显示行号
+      - description: tail
         in: query
         name: tail
         type: string
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Container Compose logs
       tags:
       - Container Compose
@@ -6341,7 +7232,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 测试 compose 是否可用
       parameters:
       - description: request
         in: body
@@ -6352,8 +7242,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Test compose
       tags:
       - Container Compose
@@ -6368,7 +7261,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新容器编排
       parameters:
       - description: request
         in: body
@@ -6381,7 +7273,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Update compose
+      - Timestamp: []
+      summary: Update Container Compose
       tags:
       - Container Compose
       x-panel-log:
@@ -6393,7 +7286,6 @@ paths:
         paramKeys: []
   /containers/daemonjson:
     get:
-      description: 获取 docker 配置信息
       produces:
       - application/json
       responses:
@@ -6403,12 +7295,12 @@ paths:
             $ref: '#/definitions/dto.DaemonJsonConf'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load docker daemon.json
       tags:
       - Container Docker
   /containers/daemonjson/file:
     get:
-      description: 获取 docker 配置信息(表单)
       produces:
       - application/json
       responses:
@@ -6418,6 +7310,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load docker daemon.json
       tags:
       - Container Docker
@@ -6425,7 +7318,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 docker 配置信息
       parameters:
       - description: request
         in: body
@@ -6438,6 +7330,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update docker daemon.json
       tags:
       - Container Docker
@@ -6453,7 +7346,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 上传替换 docker 配置文件
       parameters:
       - description: request
         in: body
@@ -6466,6 +7358,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update docker daemon.json by upload file
       tags:
       - Container Docker
@@ -6479,7 +7372,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Docker 操作
       parameters:
       - description: request
         in: body
@@ -6492,6 +7384,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate docker
       tags:
       - Container Docker
@@ -6504,7 +7397,6 @@ paths:
         paramKeys: []
   /containers/docker/status:
     get:
-      description: 获取 docker 服务状态
       produces:
       - application/json
       responses:
@@ -6514,16 +7406,32 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load docker status
       tags:
       - Container Docker
   /containers/download/log:
     post:
-      description: 下载容器日志
-      responses: {}
+      consumes:
+      - application/json
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ContainerLog'
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Download Container logs
+      tags:
+      - Container
   /containers/image:
     get:
-      description: 获取镜像名称列表
       produces:
       - application/json
       responses:
@@ -6535,12 +7443,12 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: load images options
       tags:
       - Container Image
   /containers/image/all:
     get:
-      description: 获取所有镜像列表
       produces:
       - application/json
       responses:
@@ -6552,6 +7460,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List all images
       tags:
       - Container Image
@@ -6559,7 +7468,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 构建镜像
       parameters:
       - description: request
         in: body
@@ -6574,6 +7482,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Build image
       tags:
       - Container Image
@@ -6588,7 +7497,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 导入镜像
       parameters:
       - description: request
         in: body
@@ -6601,6 +7509,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load image
       tags:
       - Container Image
@@ -6615,7 +7524,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 拉取镜像
       parameters:
       - description: request
         in: body
@@ -6630,6 +7538,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Pull image
       tags:
       - Container Image
@@ -6651,7 +7560,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 推送镜像
       parameters:
       - description: request
         in: body
@@ -6666,6 +7574,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Push image
       tags:
       - Container Image
@@ -6688,7 +7597,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除镜像
       parameters:
       - description: request
         in: body
@@ -6701,6 +7609,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete image
       tags:
       - Container Image
@@ -6715,7 +7624,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 导出镜像
       parameters:
       - description: request
         in: body
@@ -6728,6 +7636,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Save image
       tags:
       - Container Image
@@ -6744,7 +7653,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取镜像列表分页
       parameters:
       - description: request
         in: body
@@ -6761,6 +7669,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page images
       tags:
       - Container Image
@@ -6768,7 +7677,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Tag 镜像
       parameters:
       - description: request
         in: body
@@ -6781,6 +7689,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Tag image
       tags:
       - Container Image
@@ -6802,7 +7711,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取容器表单信息
       parameters:
       - description: request
         in: body
@@ -6817,6 +7725,7 @@ paths:
             $ref: '#/definitions/dto.ContainerOperate'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load container info
       tags:
       - Container
@@ -6824,7 +7733,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 容器详情
       parameters:
       - description: request
         in: body
@@ -6839,6 +7747,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Container inspect
       tags:
       - Container
@@ -6846,7 +7755,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 docker ipv6 配置
       parameters:
       - description: request
         in: body
@@ -6859,6 +7767,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update docker daemon.json ipv6 option
       tags:
       - Container Docker
@@ -6870,7 +7779,6 @@ paths:
         paramKeys: []
   /containers/limit:
     get:
-      description: 获取容器限制
       responses:
         "200":
           description: OK
@@ -6878,25 +7786,29 @@ paths:
             $ref: '#/definitions/dto.ResourceLimit'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load container limits
   /containers/list:
     post:
       consumes:
       - application/json
-      description: 获取容器名称
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              type: string
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List containers
       tags:
       - Container
   /containers/list/stats:
     get:
-      description: 获取容器列表资源占用
       responses:
         "200":
           description: OK
@@ -6906,12 +7818,12 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load container stats
   /containers/load/log:
     post:
       consumes:
       - application/json
-      description: 获取容器操作日志
       parameters:
       - description: request
         in: body
@@ -6922,8 +7834,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load container log
       tags:
       - Container
@@ -6931,7 +7846,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 docker 日志配置
       parameters:
       - description: request
         in: body
@@ -6944,6 +7858,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update docker daemon.json log option
       tags:
       - Container Docker
@@ -6957,7 +7872,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取容器网络列表
       produces:
       - application/json
       responses:
@@ -6969,13 +7883,13 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List networks
       tags:
       - Container Network
     post:
       consumes:
       - application/json
-      description: 创建容器网络
       parameters:
       - description: request
         in: body
@@ -6988,6 +7902,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create network
       tags:
       - Container Network
@@ -7002,7 +7917,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除容器网络
       parameters:
       - description: request
         in: body
@@ -7015,6 +7929,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete network
       tags:
       - Container Network
@@ -7029,7 +7944,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取容器网络列表分页
       parameters:
       - description: request
         in: body
@@ -7046,6 +7960,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page networks
       tags:
       - Container Network
@@ -7053,7 +7968,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 容器操作
       parameters:
       - description: request
         in: body
@@ -7066,6 +7980,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate Container
       tags:
       - Container
@@ -7081,7 +7996,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 容器清理
       parameters:
       - description: request
         in: body
@@ -7096,6 +8010,7 @@ paths:
             $ref: '#/definitions/dto.ContainerPruneReport'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean container
       tags:
       - Container
@@ -7110,7 +8025,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 容器重命名
       parameters:
       - description: request
         in: body
@@ -7123,6 +8037,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Rename Container
       tags:
       - Container
@@ -7136,7 +8051,6 @@ paths:
         paramKeys: []
   /containers/repo:
     get:
-      description: 获取镜像仓库列表
       produces:
       - application/json
       responses:
@@ -7148,13 +8062,13 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List image repos
       tags:
       - Container Image-repo
     post:
       consumes:
       - application/json
-      description: 创建镜像仓库
       parameters:
       - description: request
         in: body
@@ -7169,6 +8083,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create image repo
       tags:
       - Container Image-repo
@@ -7183,7 +8098,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除镜像仓库
       parameters:
       - description: request
         in: body
@@ -7198,6 +8112,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete image repo
       tags:
       - Container Image-repo
@@ -7218,7 +8133,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取镜像仓库列表分页
       parameters:
       - description: request
         in: body
@@ -7235,6 +8149,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page image repos
       tags:
       - Container Image-repo
@@ -7242,7 +8157,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取 docker 仓库状态
       parameters:
       - description: request
         in: body
@@ -7257,6 +8171,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load repo status
       tags:
       - Container Image-repo
@@ -7264,7 +8179,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新镜像仓库
       parameters:
       - description: request
         in: body
@@ -7279,6 +8193,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update image repo
       tags:
       - Container Image-repo
@@ -7299,7 +8214,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取容器列表分页
       parameters:
       - description: request
         in: body
@@ -7316,40 +8230,42 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page containers
       tags:
       - Container
   /containers/search/log:
     post:
-      description: 容器日志
       parameters:
-      - description: 容器名称
+      - description: container name
         in: query
         name: container
         type: string
-      - description: 时间筛选
+      - description: since
         in: query
         name: since
         type: string
-      - description: 是否追踪
+      - description: follow
         in: query
         name: follow
         type: string
-      - description: 显示行号
+      - description: tail
         in: query
         name: tail
         type: string
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Container logs
       tags:
       - Container
-  /containers/stats/:id:
+  /containers/stats/{id}:
     get:
-      description: 容器监控信息
       parameters:
-      - description: 容器id
+      - description: container id
         in: path
         name: id
         required: true
@@ -7361,12 +8277,12 @@ paths:
             $ref: '#/definitions/dto.ContainerStats'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Container stats
       tags:
       - Container
   /containers/template:
     get:
-      description: 获取容器编排模版列表
       produces:
       - application/json
       responses:
@@ -7378,13 +8294,13 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List compose templates
       tags:
       - Container Compose-template
     post:
       consumes:
       - application/json
-      description: 创建容器编排模版
       parameters:
       - description: request
         in: body
@@ -7397,6 +8313,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create compose template
       tags:
       - Container Compose-template
@@ -7411,7 +8328,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除容器编排模版
       parameters:
       - description: request
         in: body
@@ -7424,6 +8340,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete compose template
       tags:
       - Container Compose-template
@@ -7444,7 +8361,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取容器编排模版列表分页
       parameters:
       - description: request
         in: body
@@ -7461,6 +8377,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page compose templates
       tags:
       - Container Compose-template
@@ -7468,7 +8385,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新容器编排模版
       parameters:
       - description: request
         in: body
@@ -7481,6 +8397,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update compose template
       tags:
       - Container Compose-template
@@ -7501,7 +8418,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新容器
       parameters:
       - description: request
         in: body
@@ -7514,6 +8430,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update container
       tags:
       - Container
@@ -7529,7 +8446,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新容器镜像
       parameters:
       - description: request
         in: body
@@ -7542,6 +8458,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Upgrade container
       tags:
       - Container
@@ -7557,7 +8474,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取容器存储卷列表
       produces:
       - application/json
       responses:
@@ -7569,13 +8485,13 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
-      summary: List volumes
+      - Timestamp: []
+      summary: List Container Volumes
       tags:
       - Container Volume
     post:
       consumes:
       - application/json
-      description: 创建容器存储卷
       parameters:
       - description: request
         in: body
@@ -7588,7 +8504,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create volume
+      - Timestamp: []
+      summary: Create Container Volume
       tags:
       - Container Volume
       x-panel-log:
@@ -7602,7 +8519,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除容器存储卷
       parameters:
       - description: request
         in: body
@@ -7615,7 +8531,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Delete volume
+      - Timestamp: []
+      summary: Delete Container Volume
       tags:
       - Container Volume
       x-panel-log:
@@ -7629,7 +8546,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取容器存储卷分页
       parameters:
       - description: request
         in: body
@@ -7646,14 +8562,14 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
-      summary: Page volumes
+      - Timestamp: []
+      summary: Page Container Volumes
       tags:
       - Container Volume
   /cronjobs:
     post:
       consumes:
       - application/json
-      description: 创建计划任务
       parameters:
       - description: request
         in: body
@@ -7666,6 +8582,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create cronjob
       tags:
       - Cronjob
@@ -7681,7 +8598,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除计划任务
       parameters:
       - description: request
         in: body
@@ -7694,6 +8610,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete cronjob
       tags:
       - Cronjob
@@ -7714,7 +8631,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 下载计划任务记录
       parameters:
       - description: request
         in: body
@@ -7727,6 +8643,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Download cronjob records
       tags:
       - Cronjob
@@ -7747,7 +8664,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 手动执行计划任务
       parameters:
       - description: request
         in: body
@@ -7760,6 +8676,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Handle cronjob once
       tags:
       - Cronjob
@@ -7780,7 +8697,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 清空计划任务记录
       parameters:
       - description: request
         in: body
@@ -7793,6 +8709,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean job records
       tags:
       - Cronjob
@@ -7813,7 +8730,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取计划任务记录日志
       parameters:
       - description: request
         in: body
@@ -7824,8 +8740,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load Cronjob record log
       tags:
       - Cronjob
@@ -7833,7 +8752,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取计划任务分页
       parameters:
       - description: request
         in: body
@@ -7848,6 +8766,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page cronjobs
       tags:
       - Cronjob
@@ -7855,7 +8774,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取计划任务记录
       parameters:
       - description: request
         in: body
@@ -7870,6 +8788,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page job records
       tags:
       - Cronjob
@@ -7877,7 +8796,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新计划任务状态
       parameters:
       - description: request
         in: body
@@ -7890,6 +8808,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update cronjob status
       tags:
       - Cronjob
@@ -7911,7 +8830,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新计划任务
       parameters:
       - description: request
         in: body
@@ -7924,6 +8842,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update cronjob
       tags:
       - Cronjob
@@ -7940,11 +8859,10 @@ paths:
         formatEN: update cronjob [name]
         formatZH: 更新计划任务 [name]
         paramKeys: []
-  /dashboard/base/:ioOption/:netOption:
+  /dashboard/base/{ioOption}/{netOption}:
     get:
       consumes:
       - application/json
-      description: 获取首页基础数据
       parameters:
       - description: request
         in: path
@@ -7963,6 +8881,7 @@ paths:
             $ref: '#/definitions/dto.DashboardBase'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load dashboard base info
       tags:
       - Dashboard
@@ -7970,7 +8889,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取服务器基础数据
       responses:
         "200":
           description: OK
@@ -7978,25 +8896,21 @@ paths:
             $ref: '#/definitions/dto.OsInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load os info
       tags:
       - Dashboard
-  /dashboard/current/:ioOption/:netOption:
-    get:
+  /dashboard/current:
+    post:
       consumes:
       - application/json
-      description: 获取首页实时数据
       parameters:
       - description: request
-        in: path
-        name: ioOption
+        in: body
+        name: request
         required: true
-        type: string
-      - description: request
-        in: path
-        name: netOption
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/dto.DashboardReq'
       responses:
         "200":
           description: OK
@@ -8004,14 +8918,14 @@ paths:
             $ref: '#/definitions/dto.DashboardCurrent'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load dashboard current info
       tags:
       - Dashboard
-  /dashboard/system/restart/:operation:
+  /dashboard/system/restart/{operation}:
     post:
       consumes:
       - application/json
-      description: 重启服务器/面板
       parameters:
       - description: request
         in: path
@@ -8023,14 +8937,14 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: System restart
+      - Timestamp: []
+      summary: System restart panel
       tags:
       - Dashboard
   /databases:
     post:
       consumes:
       - application/json
-      description: 创建 mysql 数据库
       parameters:
       - description: request
         in: body
@@ -8043,6 +8957,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create mysql database
       tags:
       - Database Mysql
@@ -8057,7 +8972,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 绑定 mysql 数据库用户
       parameters:
       - description: request
         in: body
@@ -8070,6 +8984,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Bind user of mysql database
       tags:
       - Database Mysql
@@ -8085,7 +9000,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 mysql 访问权限
       parameters:
       - description: request
         in: body
@@ -8098,6 +9012,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change mysql access
       tags:
       - Database Mysql
@@ -8118,7 +9033,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 mysql 密码
       parameters:
       - description: request
         in: body
@@ -8131,6 +9045,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change mysql password
       tags:
       - Database Mysql
@@ -8151,7 +9066,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取数据库基础信息
       parameters:
       - description: request
         in: body
@@ -8166,6 +9080,7 @@ paths:
             $ref: '#/definitions/dto.DBBaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load base info
       tags:
       - Database Common
@@ -8173,7 +9088,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取数据库配置文件
       parameters:
       - description: request
         in: body
@@ -8184,8 +9098,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load Database conf
       tags:
       - Database Common
@@ -8193,7 +9110,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 上传替换配置文件
       parameters:
       - description: request
         in: body
@@ -8206,6 +9122,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update conf by upload file
       tags:
       - Database Common
@@ -8221,7 +9138,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建远程数据库
       parameters:
       - description: request
         in: body
@@ -8234,6 +9150,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create database
       tags:
       - Database
@@ -8245,9 +9162,14 @@ paths:
         formatEN: create database [name][type]
         formatZH: 创建远程数据库 [name][type]
         paramKeys: []
-  /databases/db/:name:
+  /databases/db/{name}:
     get:
-      description: 获取远程数据库
+      parameters:
+      - description: name
+        in: path
+        name: name
+        required: true
+        type: string
       responses:
         "200":
           description: OK
@@ -8255,6 +9177,7 @@ paths:
             $ref: '#/definitions/dto.DatabaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get databases
       tags:
       - Database
@@ -8262,7 +9185,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 检测远程数据库连接性
       parameters:
       - description: request
         in: body
@@ -8273,8 +9195,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check database
       tags:
       - Database
@@ -8290,7 +9215,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除远程数据库
       parameters:
       - description: request
         in: body
@@ -8303,6 +9227,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete database
       tags:
       - Database
@@ -8319,9 +9244,14 @@ paths:
         formatEN: delete database [names]
         formatZH: 删除远程数据库 [names]
         paramKeys: []
-  /databases/db/item/:type:
+  /databases/db/item/{type}:
     get:
-      description: 获取数据库列表
+      parameters:
+      - description: type
+        in: path
+        name: type
+        required: true
+        type: string
       responses:
         "200":
           description: OK
@@ -8331,12 +9261,18 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
-      summary: List databases
+      - Timestamp: []
+      summary: Retrieve database list based on type
       tags:
       - Database
-  /databases/db/list/:type:
+  /databases/db/list/{type}:
     get:
-      description: 获取远程数据库列表
+      parameters:
+      - description: type
+        in: path
+        name: type
+        required: true
+        type: string
       responses:
         "200":
           description: OK
@@ -8346,6 +9282,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List databases
       tags:
       - Database
@@ -8353,7 +9290,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取远程数据库列表分页
       parameters:
       - description: request
         in: body
@@ -8368,6 +9304,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page databases
       tags:
       - Database
@@ -8375,7 +9312,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新远程数据库
       parameters:
       - description: request
         in: body
@@ -8388,6 +9324,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update database
       tags:
       - Database
@@ -8402,7 +9339,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除 mysql 数据库
       parameters:
       - description: request
         in: body
@@ -8415,6 +9351,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete mysql database
       tags:
       - Database Mysql
@@ -8435,7 +9372,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Mysql 数据库删除前检查
       parameters:
       - description: request
         in: body
@@ -8452,6 +9388,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check before delete mysql database
       tags:
       - Database Mysql
@@ -8459,7 +9396,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 mysql 数据库库描述信息
       parameters:
       - description: request
         in: body
@@ -8472,6 +9408,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update mysql database description
       tags:
       - Database Mysql
@@ -8493,7 +9430,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 从服务器获取
       parameters:
       - description: request
         in: body
@@ -8501,9 +9437,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.MysqlLoadDB'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load mysql database from remote
       tags:
       - Database Mysql
@@ -8511,7 +9450,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取 mysql 数据库列表
       parameters:
       - description: request
         in: body
@@ -8528,6 +9466,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List mysql database names
       tags:
       - Database Mysql
@@ -8535,7 +9474,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建 postgresql 数据库
       parameters:
       - description: request
         in: body
@@ -8548,6 +9486,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create postgresql database
       tags:
       - Database Postgresql
@@ -8558,11 +9497,10 @@ paths:
         formatEN: create postgresql database [name]
         formatZH: 创建 postgresql 数据库 [name]
         paramKeys: []
-  /databases/pg/:database/load:
+  /databases/pg/{database}/load:
     post:
       consumes:
       - application/json
-      description: 从服务器获取
       parameters:
       - description: request
         in: body
@@ -8570,9 +9508,17 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.PostgresqlLoadDB'
-      responses: {}
+      - description: database
+        in: path
+        name: database
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load postgresql database from remote
       tags:
       - Database Postgresql
@@ -8580,7 +9526,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 绑定 postgresql 数据库用户
       parameters:
       - description: request
         in: body
@@ -8593,6 +9538,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Bind postgresql user
       tags:
       - Database Postgresql
@@ -8608,7 +9554,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除 postgresql 数据库
       parameters:
       - description: request
         in: body
@@ -8621,6 +9566,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete postgresql database
       tags:
       - Database Postgresql
@@ -8641,7 +9587,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Postgresql 数据库删除前检查
       parameters:
       - description: request
         in: body
@@ -8658,6 +9603,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check before delete postgresql database
       tags:
       - Database Postgresql
@@ -8665,7 +9611,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 postgresql 数据库库描述信息
       parameters:
       - description: request
         in: body
@@ -8678,6 +9623,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update postgresql database description
       tags:
       - Database Postgresql
@@ -8700,7 +9646,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 postgresql 密码
       parameters:
       - description: request
         in: body
@@ -8713,6 +9658,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change postgresql password
       tags:
       - Database Postgresql
@@ -8733,7 +9679,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 postgresql 用户权限
       parameters:
       - description: request
         in: body
@@ -8746,6 +9691,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change postgresql privileges
       tags:
       - Database Postgresql
@@ -8761,7 +9707,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 postgresql 数据库列表分页
       parameters:
       - description: request
         in: body
@@ -8776,6 +9721,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page postgresql databases
       tags:
       - Database Postgresql
@@ -8783,7 +9729,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 redis 配置信息
       parameters:
       - description: request
         in: body
@@ -8798,6 +9743,7 @@ paths:
             $ref: '#/definitions/dto.RedisConf'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load redis conf
       tags:
       - Database Redis
@@ -8805,7 +9751,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 redis 配置信息
       parameters:
       - description: request
         in: body
@@ -8818,6 +9763,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update redis conf
       tags:
       - Database Redis
@@ -8829,12 +9775,12 @@ paths:
         paramKeys: []
   /databases/redis/install/cli:
     post:
-      description: 安装 redis cli
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Install redis-cli
       tags:
       - Database Redis
@@ -8842,7 +9788,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 redis 密码
       parameters:
       - description: request
         in: body
@@ -8855,6 +9800,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change redis password
       tags:
       - Database Redis
@@ -8868,7 +9814,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 redis 持久化配置
       parameters:
       - description: request
         in: body
@@ -8883,6 +9828,7 @@ paths:
             $ref: '#/definitions/dto.RedisPersistence'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load redis persistence conf
       tags:
       - Database Redis
@@ -8890,7 +9836,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 redis 持久化配置
       parameters:
       - description: request
         in: body
@@ -8903,6 +9848,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update redis persistence conf
       tags:
       - Database Redis
@@ -8916,7 +9862,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 redis 状态信息
       parameters:
       - description: request
         in: body
@@ -8931,6 +9876,7 @@ paths:
             $ref: '#/definitions/dto.RedisStatus'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load redis status info
       tags:
       - Database Redis
@@ -8938,7 +9884,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 mysql 远程访问权限
       parameters:
       - description: request
         in: body
@@ -8953,6 +9898,7 @@ paths:
             type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load mysql remote access
       tags:
       - Database Mysql
@@ -8960,7 +9906,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 mysql 数据库列表分页
       parameters:
       - description: request
         in: body
@@ -8975,6 +9920,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page mysql databases
       tags:
       - Database Mysql
@@ -8982,7 +9928,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 mysql 状态信息
       parameters:
       - description: request
         in: body
@@ -8997,6 +9942,7 @@ paths:
             $ref: '#/definitions/dto.MysqlStatus'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load mysql status info
       tags:
       - Database Mysql
@@ -9004,7 +9950,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 mysql 性能参数信息
       parameters:
       - description: request
         in: body
@@ -9019,6 +9964,7 @@ paths:
             $ref: '#/definitions/dto.MysqlVariables'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load mysql variables info
       tags:
       - Database Mysql
@@ -9026,7 +9972,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: mysql 性能调优
       parameters:
       - description: request
         in: body
@@ -9039,6 +9984,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update mysql variables
       tags:
       - Database Mysql
@@ -9052,7 +9998,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Mysql 远程数据库删除前检查
       parameters:
       - description: request
         in: body
@@ -9069,6 +10014,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check before delete remote database
       tags:
       - Database
@@ -9076,7 +10022,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建文件/文件夹
       parameters:
       - description: request
         in: body
@@ -9089,6 +10034,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create file
       tags:
       - File
@@ -9103,7 +10049,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 批量删除文件/文件夹
       parameters:
       - description: request
         in: body
@@ -9116,6 +10061,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Batch delete file
       tags:
       - File
@@ -9130,7 +10076,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 批量修改文件权限和用户/组
       parameters:
       - description: request
         in: body
@@ -9143,6 +10088,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Batch change file mode and owner
       tags:
       - File
@@ -9160,7 +10106,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 检测文件是否存在
       parameters:
       - description: request
         in: body
@@ -9171,8 +10116,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check file exist
       tags:
       - File
@@ -9180,7 +10128,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 分片下载下载文件
       parameters:
       - description: request
         in: body
@@ -9193,6 +10140,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Chunk Download file
       tags:
       - File
@@ -9205,7 +10153,8 @@ paths:
         paramKeys: []
   /files/chunkupload:
     post:
-      description: 分片上传文件
+      consumes:
+      - multipart/form-data
       parameters:
       - description: request
         in: formData
@@ -9217,14 +10166,14 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: ChunkUpload file
+      - Timestamp: []
+      summary: Chunk upload file
       tags:
       - File
   /files/compress:
     post:
       consumes:
       - application/json
-      description: 压缩文件
       parameters:
       - description: request
         in: body
@@ -9237,6 +10186,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Compress file
       tags:
       - File
@@ -9251,7 +10201,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取文件内容
       parameters:
       - description: request
         in: body
@@ -9266,6 +10215,7 @@ paths:
             $ref: '#/definitions/response.FileInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load file content
       tags:
       - File
@@ -9280,7 +10230,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 解压文件
       parameters:
       - description: request
         in: body
@@ -9293,6 +10242,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Decompress file
       tags:
       - File
@@ -9307,7 +10257,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除文件/文件夹
       parameters:
       - description: request
         in: body
@@ -9320,6 +10269,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete file
       tags:
       - File
@@ -9334,12 +10284,12 @@ paths:
     get:
       consumes:
       - application/json
-      description: 下载文件
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Download file
       tags:
       - File
@@ -9347,7 +10297,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建收藏
       parameters:
       - description: request
         in: body
@@ -9358,8 +10307,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/model.Favorite'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create favorite
       tags:
       - File
@@ -9374,7 +10326,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除收藏
       parameters:
       - description: request
         in: body
@@ -9387,6 +10338,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete favorite
       tags:
       - File
@@ -9407,7 +10359,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取收藏列表
       parameters:
       - description: request
         in: body
@@ -9418,8 +10369,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List favorites
       tags:
       - File
@@ -9427,7 +10381,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改文件权限
       parameters:
       - description: request
         in: body
@@ -9440,6 +10393,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change file mode
       tags:
       - File
@@ -9455,7 +10409,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 移动文件
       parameters:
       - description: request
         in: body
@@ -9468,6 +10421,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Move file
       tags:
       - File
@@ -9483,7 +10437,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改文件用户/组
       parameters:
       - description: request
         in: body
@@ -9496,6 +10449,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change file owner
       tags:
       - File
@@ -9510,7 +10464,6 @@ paths:
         paramKeys: []
   /files/read:
     post:
-      description: 按行读取日志文件
       parameters:
       - description: request
         in: body
@@ -9521,8 +10474,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.FileLineContent'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Read file by Line
       tags:
       - File
@@ -9530,13 +10486,13 @@ paths:
     post:
       consumes:
       - application/json
-      description: 清空回收站文件
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Clear RecycleBin files
+      - Timestamp: []
+      summary: Clear Recycle Bin files
       tags:
       - File
       x-panel-log:
@@ -9549,7 +10505,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 还原回收站文件
       parameters:
       - description: request
         in: body
@@ -9562,7 +10517,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Reduce RecycleBin files
+      - Timestamp: []
+      summary: Reduce Recycle Bin files
       tags:
       - File
       x-panel-log:
@@ -9576,7 +10532,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取回收站文件列表
       parameters:
       - description: request
         in: body
@@ -9587,29 +10542,33 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
-      summary: List RecycleBin files
+      - Timestamp: []
+      summary: List Recycle Bin files
       tags:
       - File
   /files/recycle/status:
     get:
       consumes:
       - application/json
-      description: 获取回收站状态
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
-      summary: Get RecycleBin status
+      - Timestamp: []
+      summary: Get Recycle Bin status
       tags:
       - File
   /files/rename:
     post:
       consumes:
       - application/json
-      description: 修改文件名称
       parameters:
       - description: request
         in: body
@@ -9622,6 +10581,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change file name
       tags:
       - File
@@ -9637,7 +10597,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新文件内容
       parameters:
       - description: request
         in: body
@@ -9650,6 +10609,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update file content
       tags:
       - File
@@ -9664,7 +10624,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取文件列表
       parameters:
       - description: request
         in: body
@@ -9679,6 +10638,7 @@ paths:
             $ref: '#/definitions/response.FileInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List files
       tags:
       - File
@@ -9686,7 +10646,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取文件夹大小
       parameters:
       - description: request
         in: body
@@ -9697,8 +10656,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.DirSizeRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load file size
       tags:
       - File
@@ -9713,7 +10675,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 加载文件树
       parameters:
       - description: request
         in: body
@@ -9730,12 +10691,14 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load files tree
       tags:
       - File
   /files/upload:
     post:
-      description: 上传文件
+      consumes:
+      - multipart/form-data
       parameters:
       - description: request
         in: formData
@@ -9747,6 +10710,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Upload file
       tags:
       - File
@@ -9761,7 +10725,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 分页获取上传文件
       parameters:
       - description: request
         in: body
@@ -9773,11 +10736,10 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/response.FileInfo'
-            type: array
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page file
       tags:
       - File
@@ -9785,7 +10747,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 下载远端文件
       parameters:
       - description: request
         in: body
@@ -9796,8 +10757,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.FileWgetRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Wget file
       tags:
       - File
@@ -9814,7 +10778,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建系统组
       parameters:
       - description: request
         in: body
@@ -9827,7 +10790,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Create system group
       tags:
       - System Group
       x-panel-log:
@@ -9842,7 +10806,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除系统组
       parameters:
       - description: request
         in: body
@@ -9855,7 +10818,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Delete group
+      - Timestamp: []
+      summary: Delete system group
       tags:
       - System Group
       x-panel-log:
@@ -9881,7 +10845,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 查询系统组
       parameters:
       - description: request
         in: body
@@ -9898,14 +10861,14 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
-      summary: List groups
+      - Timestamp: []
+      summary: List system groups
       tags:
       - System Group
   /groups/update:
     post:
       consumes:
       - application/json
-      description: 更新系统组
       parameters:
       - description: request
         in: body
@@ -9918,7 +10881,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Update group
+      - Timestamp: []
+      summary: Update system group
       tags:
       - System Group
       x-panel-log:
@@ -9933,7 +10897,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 上传文件更新 SSH 配置
       parameters:
       - description: request
         in: body
@@ -9946,6 +10909,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update host SSH setting by file
       tags:
       - SSH
@@ -9957,12 +10921,14 @@ paths:
         paramKeys: []
   /host/ssh/conf:
     get:
-      description: 获取 SSH 配置文件
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load host SSH conf
       tags:
       - SSH
@@ -9970,7 +10936,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 生成 SSH 密钥
       parameters:
       - description: request
         in: body
@@ -9983,6 +10948,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Generate host SSH secret
       tags:
       - SSH
@@ -9996,7 +10962,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 SSH 登录日志
       parameters:
       - description: request
         in: body
@@ -10011,6 +10976,7 @@ paths:
             $ref: '#/definitions/dto.SSHLog'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load host SSH logs
       tags:
       - SSH
@@ -10018,7 +10984,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 SSH 服务状态
       parameters:
       - description: request
         in: body
@@ -10026,9 +10991,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.Operate'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate SSH
       tags:
       - SSH
@@ -10041,7 +11009,6 @@ paths:
         paramKeys: []
   /host/ssh/search:
     post:
-      description: 加载 SSH 配置信息
       responses:
         "200":
           description: OK
@@ -10049,6 +11016,7 @@ paths:
             $ref: '#/definitions/dto.SSHInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load host SSH setting info
       tags:
       - SSH
@@ -10056,7 +11024,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 SSH 密钥
       parameters:
       - description: request
         in: body
@@ -10067,8 +11034,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load host SSH secret
       tags:
       - SSH
@@ -10076,7 +11046,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 SSH 配置
       parameters:
       - description: request
         in: body
@@ -10089,6 +11058,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update host SSH setting
       tags:
       - SSH
@@ -10104,7 +11074,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取主机工具状态
       parameters:
       - description: request
         in: body
@@ -10115,16 +11084,18 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.HostToolRes'
       security:
       - ApiKeyAuth: []
-      summary: Get tool
+      - Timestamp: []
+      summary: Get tool status
       tags:
       - Host tool
   /host/tool/config:
     post:
       consumes:
       - application/json
-      description: 操作主机工具配置文件
       parameters:
       - description: request
         in: body
@@ -10135,8 +11106,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.HostToolConfig'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get tool config
       tags:
       - Host tool
@@ -10151,7 +11125,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建主机工具配置
       parameters:
       - description: request
         in: body
@@ -10164,6 +11137,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create Host tool Config
       tags:
       - Host tool
@@ -10178,7 +11152,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取主机工具日志
       parameters:
       - description: request
         in: body
@@ -10189,16 +11162,18 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
-      summary: Get tool
+      - Timestamp: []
+      summary: Get tool logs
       tags:
       - Host tool
   /host/tool/operate:
     post:
       consumes:
       - application/json
-      description: 操作主机工具
       parameters:
       - description: request
         in: body
@@ -10211,6 +11186,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate tool
       tags:
       - Host tool
@@ -10226,19 +11202,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取 Supervisor 进程配置
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.SupervisorProcessConfig'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get Supervisor process config
       tags:
       - Host tool
     post:
       consumes:
       - application/json
-      description: 操作守护进程
       parameters:
       - description: request
         in: body
@@ -10251,6 +11228,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create Supervisor process
       tags:
       - Host tool
@@ -10265,7 +11243,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作 Supervisor 进程文件
       parameters:
       - description: request
         in: body
@@ -10276,8 +11253,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get Supervisor process config
       tags:
       - Host tool
@@ -10292,7 +11272,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建主机
       parameters:
       - description: request
         in: body
@@ -10303,8 +11282,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.HostInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create host
       tags:
       - Host
@@ -10318,7 +11300,6 @@ paths:
         paramKeys: []
   /hosts/command:
     get:
-      description: 获取快速命令列表
       responses:
         "200":
           description: OK
@@ -10326,13 +11307,13 @@ paths:
             $ref: '#/definitions/dto.CommandInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List commands
       tags:
       - Command
     post:
       consumes:
       - application/json
-      description: 创建快速命令
       parameters:
       - description: request
         in: body
@@ -10345,6 +11326,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create command
       tags:
       - Command
@@ -10360,7 +11342,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除快速命令
       parameters:
       - description: request
         in: body
@@ -10373,6 +11354,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete command
       tags:
       - Command
@@ -10391,21 +11373,22 @@ paths:
         paramKeys: []
   /hosts/command/redis:
     get:
-      description: 获取 redis 快速命令列表
       responses:
         "200":
           description: OK
           schema:
-            type: Array
+            items:
+              $ref: '#/definitions/dto.RedisCommand'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List redis commands
       tags:
       - Redis Command
     post:
       consumes:
       - application/json
-      description: 保存 Redis 快速命令
       parameters:
       - description: request
         in: body
@@ -10418,6 +11401,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Save redis command
       tags:
       - Redis Command
@@ -10433,7 +11417,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除 redis 快速命令
       parameters:
       - description: request
         in: body
@@ -10446,6 +11429,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete redis command
       tags:
       - Redis Command
@@ -10466,7 +11450,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 redis 快速命令列表分页
       parameters:
       - description: request
         in: body
@@ -10481,6 +11464,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page redis commands
       tags:
       - Redis Command
@@ -10488,7 +11472,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取快速命令列表分页
       parameters:
       - description: request
         in: body
@@ -10503,6 +11486,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page commands
       tags:
       - Command
@@ -10510,14 +11494,16 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取快速命令树
       responses:
         "200":
           description: OK
           schema:
-            type: Array
+            items:
+              $ref: '#/definitions/dto.CommandTree'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Tree commands
       tags:
       - Command
@@ -10525,7 +11511,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新快速命令
       parameters:
       - description: request
         in: body
@@ -10538,6 +11523,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update command
       tags:
       - Command
@@ -10552,7 +11538,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除主机
       parameters:
       - description: request
         in: body
@@ -10565,6 +11550,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete host
       tags:
       - Host
@@ -10583,7 +11569,6 @@ paths:
         paramKeys: []
   /hosts/firewall/base:
     get:
-      description: 获取防火墙基础信息
       responses:
         "200":
           description: OK
@@ -10591,6 +11576,7 @@ paths:
             $ref: '#/definitions/dto.FirewallBaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load firewall base info
       tags:
       - Firewall
@@ -10598,7 +11584,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 批量删除防火墙规则
       parameters:
       - description: request
         in: body
@@ -10611,14 +11596,14 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Batch create group
       tags:
       - Firewall
   /hosts/firewall/forward:
     post:
       consumes:
       - application/json
-      description: 更新防火墙端口转发规则
       parameters:
       - description: request
         in: body
@@ -10631,7 +11616,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Update firewall port group
       tags:
       - Firewall
       x-panel-log:
@@ -10645,7 +11631,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建防火墙 IP 规则
       parameters:
       - description: request
         in: body
@@ -10658,7 +11643,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Create firewall group
       tags:
       - Firewall
       x-panel-log:
@@ -10673,7 +11659,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改防火墙状态
       parameters:
       - description: request
         in: body
@@ -10684,10 +11669,9 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page firewall status
       tags:
       - Firewall
@@ -10702,7 +11686,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建防火墙端口规则
       parameters:
       - description: request
         in: body
@@ -10715,7 +11698,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Create firewall port group
       tags:
       - Firewall
       x-panel-log:
@@ -10730,7 +11714,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取防火墙规则列表分页
       parameters:
       - description: request
         in: body
@@ -10745,6 +11728,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page firewall rules
       tags:
       - Firewall
@@ -10752,7 +11736,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 ip 防火墙规则
       parameters:
       - description: request
         in: body
@@ -10765,14 +11748,14 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Update address group
       tags:
       - Firewall
   /hosts/firewall/update/description:
     post:
       consumes:
       - application/json
-      description: 更新防火墙描述
       parameters:
       - description: request
         in: body
@@ -10785,6 +11768,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update rule description
       tags:
       - Firewall
@@ -10792,7 +11776,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新端口防火墙规则
       parameters:
       - description: request
         in: body
@@ -10805,17 +11788,18 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Create group
+      - Timestamp: []
+      summary: Update firewall group
       tags:
       - Firewall
   /hosts/monitor/clean:
     post:
-      description: 清空监控数据
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean monitor datas
       tags:
       - Monitor
@@ -10827,7 +11811,6 @@ paths:
         paramKeys: []
   /hosts/monitor/search:
     post:
-      description: 获取监控数据
       parameters:
       - description: request
         in: body
@@ -10838,8 +11821,13 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.MonitorData'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load monitor datas
       tags:
       - Monitor
@@ -10847,7 +11835,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取主机列表分页
       parameters:
       - description: request
         in: body
@@ -10859,19 +11846,17 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.HostTree'
-            type: array
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page host
       tags:
       - Host
-  /hosts/test/byid/:id:
+  /hosts/test/byid/{id}:
     post:
       consumes:
       - application/json
-      description: 测试主机连接
       parameters:
       - description: request
         in: path
@@ -10885,6 +11870,7 @@ paths:
             type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Test host conn by host id
       tags:
       - Host
@@ -10892,7 +11878,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 测试主机连接
       parameters:
       - description: request
         in: body
@@ -10903,8 +11888,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Test host conn by info
       tags:
       - Host
@@ -10912,7 +11900,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 加载主机树
       parameters:
       - description: request
         in: body
@@ -10929,6 +11916,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load host tree
       tags:
       - Host
@@ -10936,7 +11924,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新主机
       parameters:
       - description: request
         in: body
@@ -10949,6 +11936,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update host
       tags:
       - Host
@@ -10964,7 +11952,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 切换分组
       parameters:
       - description: request
         in: body
@@ -10977,6 +11964,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update host group
       tags:
       - Host
@@ -10998,7 +11986,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 清空操作日志
       parameters:
       - description: request
         in: body
@@ -11009,10 +11996,9 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean operation logs
       tags:
       - Logs
@@ -11027,7 +12013,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取系统登录日志列表分页
       parameters:
       - description: request
         in: body
@@ -11042,6 +12027,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page login logs
       tags:
       - Logs
@@ -11049,7 +12035,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取系统操作日志列表分页
       parameters:
       - description: request
         in: body
@@ -11064,52 +12049,59 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page operation logs
       tags:
       - Logs
   /logs/system:
     post:
-      description: 获取系统日志
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load system logs
       tags:
       - Logs
   /logs/system/files:
     get:
-      description: 获取系统日志文件列表
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              type: string
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load system log files
       tags:
       - Logs
   /openresty:
     get:
-      description: 获取 OpenResty 配置信息
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.FileInfo'
+            $ref: '#/definitions/response.NginxFile'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load OpenResty conf
       tags:
       - OpenResty
   /openresty/clear:
     post:
-      description: 清理 OpenResty 代理缓存
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clear OpenResty proxy cache
       tags:
       - OpenResty
@@ -11123,7 +12115,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 上传更新 OpenResty 配置文件
       parameters:
       - description: request
         in: body
@@ -11136,6 +12127,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update OpenResty conf by upload file
       tags:
       - OpenResty
@@ -11149,7 +12141,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取部分 OpenResty 配置信息
       parameters:
       - description: request
         in: body
@@ -11166,12 +12157,12 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load partial OpenResty conf
       tags:
       - OpenResty
   /openresty/status:
     get:
-      description: 获取 OpenResty 状态信息
       responses:
         "200":
           description: OK
@@ -11179,6 +12170,7 @@ paths:
             $ref: '#/definitions/response.NginxStatus'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load OpenResty status info
       tags:
       - OpenResty
@@ -11186,7 +12178,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 OpenResty 配置信息
       parameters:
       - description: request
         in: body
@@ -11199,6 +12190,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update OpenResty conf
       tags:
       - OpenResty
@@ -11217,7 +12209,6 @@ paths:
         paramKeys: []
   /process/stop:
     post:
-      description: 停止进程
       parameters:
       - description: request
         in: body
@@ -11230,6 +12221,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Stop Process
       tags:
       - Process
@@ -11244,7 +12236,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建运行环境
       parameters:
       - description: request
         in: body
@@ -11255,8 +12246,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/model.Runtime'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create runtime
       tags:
       - Runtime
@@ -11267,11 +12261,10 @@ paths:
         formatEN: Create runtime [name]
         formatZH: 创建运行环境 [name]
         paramKeys: []
-  /runtimes/:id:
+  /runtimes/{id}:
     get:
       consumes:
       - application/json
-      description: 获取运行环境
       parameters:
       - description: request
         in: path
@@ -11281,8 +12274,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.RuntimeDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get runtime
       tags:
       - Runtime
@@ -11290,7 +12286,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除运行环境
       parameters:
       - description: request
         in: body
@@ -11303,6 +12298,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete runtime
       tags:
       - Website
@@ -11310,14 +12306,13 @@ paths:
         BeforeFunctions: []
         bodyKeys:
         - id
-        formatEN: Delete website [name]
-        formatZH: 删除网站 [name]
+        formatEN: Delete runtime [name]
+        formatZH: 删除运行环境 [name]
         paramKeys: []
   /runtimes/node/modules:
     post:
       consumes:
       - application/json
-      description: 获取 Node 项目的 modules
       parameters:
       - description: request
         in: body
@@ -11328,8 +12323,13 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.NodeModule'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get Node modules
       tags:
       - Runtime
@@ -11337,7 +12337,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作 Node 项目 modules
       parameters:
       - description: request
         in: body
@@ -11350,6 +12349,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate Node modules
       tags:
       - Runtime
@@ -11357,7 +12357,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 Node 项目的 scripts
       parameters:
       - description: request
         in: body
@@ -11368,8 +12367,13 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.PackageScripts'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get Node package scripts
       tags:
       - Runtime
@@ -11377,7 +12381,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作运行环境
       parameters:
       - description: request
         in: body
@@ -11390,6 +12393,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate runtime
       tags:
       - Runtime
@@ -11404,7 +12408,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create Extensions
       parameters:
       - description: request
         in: body
@@ -11417,6 +12420,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create Extensions
       tags:
       - PHP Extensions
@@ -11424,7 +12428,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Delete Extensions
       parameters:
       - description: request
         in: body
@@ -11437,6 +12440,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete Extensions
       tags:
       - PHP Extensions
@@ -11444,7 +12448,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Page Extensions
       parameters:
       - description: request
         in: body
@@ -11456,11 +12459,10 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/response.PHPExtensionsDTO'
-            type: array
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page Extensions
       tags:
       - PHP Extensions
@@ -11468,7 +12470,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update Extensions
       parameters:
       - description: request
         in: body
@@ -11481,6 +12482,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update Extensions
       tags:
       - PHP Extensions
@@ -11488,7 +12490,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取运行环境列表
       parameters:
       - description: request
         in: body
@@ -11499,8 +12500,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List runtimes
       tags:
       - Runtime
@@ -11508,12 +12512,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: 同步运行环境状态
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Sync runtime status
       tags:
       - Runtime
@@ -11521,7 +12525,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新运行环境
       parameters:
       - description: request
         in: body
@@ -11534,6 +12537,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update runtime
       tags:
       - Runtime
@@ -11544,11 +12548,58 @@ paths:
         formatEN: Update runtime [name]
         formatZH: 更新运行环境 [name]
         paramKeys: []
+  /settings/api/config/generate/key:
+    post:
+      consumes:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Generate api key
+      tags:
+      - System Setting
+      x-panel-log:
+        BeforeFunctions: []
+        bodyKeys: []
+        formatEN: generate api key
+        formatZH: 生成 API 接口密钥
+        paramKeys: []
+  /settings/api/config/update:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ApiInterfaceConfig'
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Update api config
+      tags:
+      - System Setting
+      x-panel-log:
+        BeforeFunctions: []
+        bodyKeys:
+        - ipWhiteList
+        formatEN: 'update api config => IP White List: [ipWhiteList]'
+        formatZH: '更新 API 接口配置 => IP 白名单: [ipWhiteList]'
+        paramKeys: []
   /settings/backup:
     post:
       consumes:
       - application/json
-      description: 创建备份账号
       parameters:
       - description: request
         in: body
@@ -11561,6 +12612,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create backup account
       tags:
       - Backup Account
@@ -11575,7 +12627,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 备份系统数据
       parameters:
       - description: request
         in: body
@@ -11588,6 +12639,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Backup system data
       tags:
       - Backup Account
@@ -11604,7 +12656,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除备份账号
       parameters:
       - description: request
         in: body
@@ -11617,6 +12668,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete backup account
       tags:
       - Backup Account
@@ -11637,7 +12689,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取 OneDrive 信息
       responses:
         "200":
           description: OK
@@ -11645,6 +12696,7 @@ paths:
             $ref: '#/definitions/dto.OneDriveInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load OneDrive info
       tags:
       - Backup Account
@@ -11652,7 +12704,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除备份记录
       parameters:
       - description: request
         in: body
@@ -11665,6 +12716,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete backup record
       tags:
       - Backup Account
@@ -11685,7 +12737,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 下载备份记录
       parameters:
       - description: request
         in: body
@@ -11696,8 +12747,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Download backup record
       tags:
       - Backup Account
@@ -11713,7 +12767,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取备份记录列表分页
       parameters:
       - description: request
         in: body
@@ -11724,8 +12777,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page backup records
       tags:
       - Backup Account
@@ -11733,7 +12789,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 通过计划任务获取备份记录列表分页
       parameters:
       - description: request
         in: body
@@ -11744,16 +12799,66 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page backup records by cronjob
+      tags:
+      - Backup Account
+  /settings/backup/record/size:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RecordSearch'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.BackupFile'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Load backup records size
+      tags:
+      - Backup Account
+  /settings/backup/record/size/bycronjob:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RecordSearchByCronjob'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.BackupFile'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Load backup records size for cronjob
       tags:
       - Backup Account
   /settings/backup/recover:
     post:
       consumes:
       - application/json
-      description: 恢复系统数据
       parameters:
       - description: request
         in: body
@@ -11766,6 +12871,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Recover system data
       tags:
       - Backup Account
@@ -11783,7 +12889,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 从上传恢复系统数据
       parameters:
       - description: request
         in: body
@@ -11796,6 +12901,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Recover system data by upload
       tags:
       - Backup Account
@@ -11811,18 +12917,17 @@ paths:
         paramKeys: []
   /settings/backup/refresh/onedrive:
     post:
-      description: 刷新 OneDrive token
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Refresh OneDrive token
       tags:
       - Backup Account
   /settings/backup/search:
     get:
-      description: 获取备份账号列表
       responses:
         "200":
           description: OK
@@ -11832,13 +12937,13 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List backup accounts
       tags:
       - Backup Account
     post:
       consumes:
       - application/json
-      description: 获取 bucket 列表
       parameters:
       - description: request
         in: body
@@ -11851,10 +12956,11 @@ paths:
           description: OK
           schema:
             items:
-              type: string
+              type: object
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List buckets
       tags:
       - Backup Account
@@ -11862,7 +12968,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取备份账号内文件列表
       parameters:
       - description: request
         in: body
@@ -11879,6 +12984,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List files from backup accounts
       tags:
       - Backup Account
@@ -11886,7 +12992,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新备份账号信息
       parameters:
       - description: request
         in: body
@@ -11899,6 +13004,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update backup account
       tags:
       - Backup Account
@@ -11911,7 +13017,6 @@ paths:
         paramKeys: []
   /settings/basedir:
     get:
-      description: 获取安装根目录
       responses:
         "200":
           description: OK
@@ -11919,14 +13024,14 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: Load local backup dir
+      - Timestamp: []
+      summary: Load local base dir
       tags:
       - System Setting
   /settings/bind/update:
     post:
       consumes:
       - application/json
-      description: 更新系统监听信息
       parameters:
       - description: request
         in: body
@@ -11939,6 +13044,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update system bind info
       tags:
       - System Setting
@@ -11954,7 +13060,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 重置过期系统登录密码
       parameters:
       - description: request
         in: body
@@ -11967,6 +13072,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Reset system password expired
       tags:
       - System Setting
@@ -11980,12 +13086,16 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取系统地址信息
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              type: string
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load system address
       tags:
       - System Setting
@@ -11993,7 +13103,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 隐藏高级功能菜单
       parameters:
       - description: request
         in: body
@@ -12006,6 +13115,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update system setting
       tags:
       - System Setting
@@ -12019,7 +13129,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 mfa 信息
       parameters:
       - description: request
         in: body
@@ -12034,6 +13143,7 @@ paths:
             $ref: '#/definitions/mfa.Otp'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load mfa info
       tags:
       - System Setting
@@ -12041,7 +13151,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Mfa 绑定
       parameters:
       - description: request
         in: body
@@ -12054,6 +13163,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Bind mfa
       tags:
       - System Setting
@@ -12067,7 +13177,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新系统登录密码
       parameters:
       - description: request
         in: body
@@ -12080,6 +13189,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update system password
       tags:
       - System Setting
@@ -12093,7 +13203,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新系统端口
       parameters:
       - description: request
         in: body
@@ -12106,6 +13215,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update system port
       tags:
       - System Setting
@@ -12120,7 +13230,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 服务器代理配置
       parameters:
       - description: request
         in: body
@@ -12133,6 +13242,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update proxy setting
       tags:
       - System Setting
@@ -12146,7 +13256,6 @@ paths:
         paramKeys: []
   /settings/search:
     post:
-      description: 加载系统配置信息
       responses:
         "200":
           description: OK
@@ -12154,17 +13263,18 @@ paths:
             $ref: '#/definitions/dto.SettingInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load system setting info
       tags:
       - System Setting
   /settings/search/available:
     get:
-      description: 获取系统可用状态
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load system available status
       tags:
       - System Setting
@@ -12172,7 +13282,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建系统快照
       parameters:
       - description: request
         in: body
@@ -12185,6 +13294,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create system snapshot
       tags:
       - System Setting
@@ -12200,7 +13310,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除系统快照
       parameters:
       - description: request
         in: body
@@ -12213,6 +13322,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete system backup
       tags:
       - System Setting
@@ -12233,7 +13343,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新快照描述信息
       parameters:
       - description: request
         in: body
@@ -12246,6 +13355,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update snapshot description
       tags:
       - System Setting
@@ -12267,7 +13377,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 导入已有快照
       parameters:
       - description: request
         in: body
@@ -12280,6 +13389,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Import system snapshot
       tags:
       - System Setting
@@ -12295,7 +13405,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 从系统快照恢复
       parameters:
       - description: request
         in: body
@@ -12308,6 +13417,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Recover system backup
       tags:
       - System Setting
@@ -12328,7 +13438,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 从系统快照回滚
       parameters:
       - description: request
         in: body
@@ -12341,6 +13450,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Rollback system backup
       tags:
       - System Setting
@@ -12361,14 +13471,13 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取系统快照列表分页
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.SearchWithPage'
+          $ref: '#/definitions/dto.PageSnapshot'
       responses:
         "200":
           description: OK
@@ -12376,14 +13485,38 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page system snapshot
+      tags:
+      - System Setting
+  /settings/snapshot/size:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PageSnapshot'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SnapshotFile'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Load system snapshot size
       tags:
       - System Setting
   /settings/snapshot/status:
     post:
       consumes:
       - application/json
-      description: 获取快照状态
       parameters:
       - description: request
         in: body
@@ -12394,32 +13527,35 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.SnapshotStatus'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load Snapshot status
       tags:
       - System Setting
   /settings/ssl/download:
     post:
-      description: 下载证书
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Download system cert
       tags:
       - System Setting
   /settings/ssl/info:
     get:
-      description: 获取证书信息
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SettingInfo'
+            $ref: '#/definitions/dto.SSLInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load system cert info
       tags:
       - System Setting
@@ -12427,7 +13563,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改系统 ssl 登录
       parameters:
       - description: request
         in: body
@@ -12440,6 +13575,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update system ssl
       tags:
       - System Setting
@@ -12454,7 +13590,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新系统配置
       parameters:
       - description: request
         in: body
@@ -12467,6 +13602,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update system setting
       tags:
       - System Setting
@@ -12482,7 +13618,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取版本 release notes
       parameters:
       - description: request
         in: body
@@ -12493,15 +13628,17 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load release notes by version
       tags:
       - System Setting
     post:
       consumes:
       - application/json
-      description: 系统更新
       parameters:
       - description: request
         in: body
@@ -12514,6 +13651,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Upgrade
       tags:
       - System Setting
@@ -12528,7 +13666,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建扫描规则
       parameters:
       - description: request
         in: body
@@ -12541,6 +13678,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create clam
       tags:
       - Clam
@@ -12556,7 +13694,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取 Clam 基础信息
       responses:
         "200":
           description: OK
@@ -12564,6 +13701,7 @@ paths:
             $ref: '#/definitions/dto.ClamBaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load clam base info
       tags:
       - Clam
@@ -12571,7 +13709,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除扫描规则
       parameters:
       - description: request
         in: body
@@ -12584,6 +13721,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete clam
       tags:
       - Clam
@@ -12604,7 +13742,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取扫描文件
       parameters:
       - description: request
         in: body
@@ -12616,9 +13753,10 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PageResult'
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load clam file
       tags:
       - Clam
@@ -12626,7 +13764,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新病毒扫描配置文件
       parameters:
       - description: request
         in: body
@@ -12639,6 +13776,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update clam file
       tags:
       - Clam
@@ -12646,7 +13784,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 执行病毒扫描
       parameters:
       - description: request
         in: body
@@ -12659,6 +13796,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Handle clam scan
       tags:
       - Clam
@@ -12679,7 +13817,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 Clam 状态
       parameters:
       - description: request
         in: body
@@ -12687,9 +13824,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.Operate'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate Clam
       tags:
       - Clam
@@ -12704,7 +13844,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 清空扫描报告
       parameters:
       - description: request
         in: body
@@ -12712,9 +13851,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.OperateByID'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean clam record
       tags:
       - Clam
@@ -12735,7 +13877,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取扫描结果详情
       parameters:
       - description: request
         in: body
@@ -12746,8 +13887,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load clam record detail
       tags:
       - Clam
@@ -12755,7 +13899,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取扫描结果列表分页
       parameters:
       - description: request
         in: body
@@ -12770,6 +13913,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page clam record
       tags:
       - Clam
@@ -12777,7 +13921,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取扫描规则列表分页
       parameters:
       - description: request
         in: body
@@ -12792,6 +13935,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page clam
       tags:
       - Clam
@@ -12799,7 +13943,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改扫描规则状态
       parameters:
       - description: request
         in: body
@@ -12812,6 +13955,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update clam status
       tags:
       - Clam
@@ -12833,7 +13977,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改扫描规则
       parameters:
       - description: request
         in: body
@@ -12846,6 +13989,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update clam
       tags:
       - Clam
@@ -12861,7 +14005,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 清理系统垃圾文件
       parameters:
       - description: request
         in: body
@@ -12876,6 +14019,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Clean system
       tags:
       - Device
@@ -12887,7 +14031,6 @@ paths:
         paramKeys: []
   /toolbox/device/base:
     post:
-      description: 获取设备基础信息
       responses:
         "200":
           description: OK
@@ -12895,6 +14038,7 @@ paths:
             $ref: '#/definitions/dto.DeviceBaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load device base info
       tags:
       - Device
@@ -12902,7 +14046,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 检查系统 DNS 配置可用性
       parameters:
       - description: request
         in: body
@@ -12913,8 +14056,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            type: boolean
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check device DNS conf
       tags:
       - Device
@@ -12922,7 +14068,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取系统配置文件
       parameters:
       - description: request
         in: body
@@ -12933,8 +14078,13 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              type: string
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: load conf
       tags:
       - Device
@@ -12942,7 +14092,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 通过文件修改配置
       parameters:
       - description: request
         in: body
@@ -12955,6 +14104,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update device conf by file
       tags:
       - Device
@@ -12962,7 +14112,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改系统参数
       parameters:
       - description: request
         in: body
@@ -12975,6 +14124,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update device
       tags:
       - Device
@@ -12988,12 +14138,12 @@ paths:
         paramKeys: []
   /toolbox/device/update/host:
     post:
-      description: 修改系统 hosts
       responses:
         "200":
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update device hosts
       tags:
       - Device
@@ -13009,7 +14159,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改系统密码
       parameters:
       - description: request
         in: body
@@ -13022,6 +14171,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update device passwd
       tags:
       - Device
@@ -13029,7 +14179,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改系统 Swap
       parameters:
       - description: request
         in: body
@@ -13042,6 +14191,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update device swap
       tags:
       - Device
@@ -13057,20 +14207,21 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取系统可用时区选项
       responses:
         "200":
           description: OK
           schema:
-            type: Array
+            items:
+              type: string
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: list time zone options
       tags:
       - Device
   /toolbox/fail2ban/base:
     get:
-      description: 获取 Fail2ban 基础信息
       responses:
         "200":
           description: OK
@@ -13078,6 +14229,7 @@ paths:
             $ref: '#/definitions/dto.Fail2BanBaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load fail2ban base info
       tags:
       - Fail2ban
@@ -13085,12 +14237,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取 fail2ban 配置文件
       responses:
         "200":
           description: OK
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load fail2ban conf
       tags:
       - Fail2ban
@@ -13098,7 +14252,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 Fail2ban 状态
       parameters:
       - description: request
         in: body
@@ -13106,9 +14259,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.Operate'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate fail2ban
       tags:
       - Fail2ban
@@ -13123,7 +14279,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 配置 sshd
       parameters:
       - description: request
         in: body
@@ -13131,9 +14286,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.Operate'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate sshd of fail2ban
       tags:
       - Fail2ban
@@ -13141,7 +14299,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 Fail2ban ip
       parameters:
       - description: request
         in: body
@@ -13153,9 +14310,12 @@ paths:
         "200":
           description: OK
           schema:
-            type: Array
+            items:
+              type: string
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page fail2ban ip list
       tags:
       - Fail2ban
@@ -13163,7 +14323,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 Fail2ban 配置
       parameters:
       - description: request
         in: body
@@ -13176,6 +14335,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update fail2ban conf
       tags:
       - Fail2ban
@@ -13191,7 +14351,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 通过文件修改 fail2ban 配置
       parameters:
       - description: request
         in: body
@@ -13204,6 +14363,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update fail2ban conf by file
       tags:
       - Fail2ban
@@ -13211,7 +14371,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建 FTP 账户
       parameters:
       - description: request
         in: body
@@ -13224,6 +14383,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create FTP user
       tags:
       - FTP
@@ -13237,7 +14397,6 @@ paths:
         paramKeys: []
   /toolbox/ftp/base:
     get:
-      description: 获取 FTP 基础信息
       responses:
         "200":
           description: OK
@@ -13245,6 +14404,7 @@ paths:
             $ref: '#/definitions/dto.FtpBaseInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load FTP base info
       tags:
       - FTP
@@ -13252,7 +14412,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除 FTP 账户
       parameters:
       - description: request
         in: body
@@ -13265,6 +14424,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete FTP user
       tags:
       - FTP
@@ -13285,7 +14445,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 FTP 操作日志
       parameters:
       - description: request
         in: body
@@ -13300,6 +14459,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load FTP operation log
       tags:
       - FTP
@@ -13307,7 +14467,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 FTP 状态
       parameters:
       - description: request
         in: body
@@ -13315,9 +14474,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.Operate'
-      responses: {}
+      responses:
+        "200":
+          description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate FTP
       tags:
       - FTP
@@ -13332,7 +14494,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 FTP 账户列表分页
       parameters:
       - description: request
         in: body
@@ -13347,6 +14508,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page FTP user
       tags:
       - FTP
@@ -13354,7 +14516,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 同步 FTP 账户
       parameters:
       - description: request
         in: body
@@ -13367,6 +14528,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Sync FTP user
       tags:
       - FTP
@@ -13380,7 +14542,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改 FTP 账户
       parameters:
       - description: request
         in: body
@@ -13393,6 +14554,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update FTP user
       tags:
       - FTP
@@ -13406,12 +14568,14 @@ paths:
         paramKeys: []
   /toolbox/scan:
     post:
-      description: 扫描系统垃圾文件
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.CleanData'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Scan system
       tags:
       - Device
@@ -13425,7 +14589,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建网站
       parameters:
       - description: request
         in: body
@@ -13438,6 +14601,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create website
       tags:
       - Website
@@ -13448,11 +14612,10 @@ paths:
         formatEN: Create website [primaryDomain]
         formatZH: 创建网站 [primaryDomain]
         paramKeys: []
-  /websites/:id:
+  /websites/{id}:
     get:
       consumes:
       - application/json
-      description: 通过 id 查询网站
       parameters:
       - description: request
         in: path
@@ -13466,20 +14629,25 @@ paths:
             $ref: '#/definitions/response.WebsiteDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search website by id
       tags:
       - Website
-  /websites/:id/config/:type:
+  /websites/{id}/config/{type}:
     get:
       consumes:
       - application/json
-      description: 通过 id 查询网站 nginx
       parameters:
       - description: request
         in: path
         name: id
         required: true
         type: integer
+      - description: type
+        in: path
+        name: type
+        required: true
+        type: string
       responses:
         "200":
           description: OK
@@ -13487,14 +14655,14 @@ paths:
             $ref: '#/definitions/response.FileInfo'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search website nginx by id
       tags:
       - Website Nginx
-  /websites/:id/https:
+  /websites/{id}/https:
     get:
       consumes:
       - application/json
-      description: 获取 https 配置
       parameters:
       - description: request
         in: path
@@ -13508,14 +14676,19 @@ paths:
             $ref: '#/definitions/response.WebsiteHTTPS'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load https conf
       tags:
       - Website HTTPS
     post:
       consumes:
       - application/json
-      description: 更新 https 配置
       parameters:
+      - description: request
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: request
         in: body
         name: request
@@ -13529,6 +14702,7 @@ paths:
             $ref: '#/definitions/response.WebsiteHTTPS'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update https conf
       tags:
       - Website HTTPS
@@ -13549,7 +14723,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建网站 acme
       parameters:
       - description: request
         in: body
@@ -13564,6 +14737,7 @@ paths:
             $ref: '#/definitions/response.WebsiteAcmeAccountDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create website acme account
       tags:
       - Website Acme
@@ -13578,7 +14752,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除网站 acme
       parameters:
       - description: request
         in: body
@@ -13591,6 +14764,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete website acme account
       tags:
       - Website Acme
@@ -13611,7 +14785,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取网站 acme 列表分页
       parameters:
       - description: request
         in: body
@@ -13626,6 +14799,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page website acme accounts
       tags:
       - Website Acme
@@ -13633,7 +14807,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取密码访问配置
       parameters:
       - description: request
         in: body
@@ -13644,8 +14817,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.NginxAuthRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get AuthBasic conf
       tags:
       - Website
@@ -13653,7 +14829,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新密码访问配置
       parameters:
       - description: request
         in: body
@@ -13666,6 +14841,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get AuthBasic conf
       tags:
       - Website
@@ -13673,7 +14849,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建网站 ca
       parameters:
       - description: request
         in: body
@@ -13688,6 +14863,7 @@ paths:
             $ref: '#/definitions/request.WebsiteCACreate'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create website ca
       tags:
       - Website CA
@@ -13702,7 +14878,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取网站 ca
       parameters:
       - description: id
         in: path
@@ -13716,6 +14891,7 @@ paths:
             $ref: '#/definitions/response.WebsiteCADTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get website ca
       tags:
       - Website CA
@@ -13723,7 +14899,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除网站 ca
       parameters:
       - description: request
         in: body
@@ -13736,6 +14911,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete website ca
       tags:
       - Website CA
@@ -13756,7 +14932,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 下载 CA 证书文件
       parameters:
       - description: request
         in: body
@@ -13769,6 +14944,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Download CA file
       tags:
       - Website CA
@@ -13789,7 +14965,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 自签 SSL 证书
       parameters:
       - description: request
         in: body
@@ -13802,6 +14977,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Obtain SSL
       tags:
       - Website CA
@@ -13822,7 +14998,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 续签 SSL 证书
       parameters:
       - description: request
         in: body
@@ -13835,7 +15010,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Obtain SSL
+      - Timestamp: []
+      summary: Renew Obtain SSL
       tags:
       - Website CA
       x-panel-log:
@@ -13855,7 +15031,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取网站 ca 列表分页
       parameters:
       - description: request
         in: body
@@ -13870,6 +15045,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page website ca
       tags:
       - Website CA
@@ -13877,7 +15053,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 网站创建前检查
       parameters:
       - description: request
         in: body
@@ -13894,6 +15069,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Check before create website
       tags:
       - Website
@@ -13901,7 +15077,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取 nginx 配置
       parameters:
       - description: request
         in: body
@@ -13916,6 +15091,7 @@ paths:
             $ref: '#/definitions/response.WebsiteNginxConfig'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load nginx conf
       tags:
       - Website Nginx
@@ -13923,7 +15099,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 nginx 配置
       parameters:
       - description: request
         in: body
@@ -13936,6 +15111,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update nginx conf
       tags:
       - Website Nginx
@@ -13952,18 +15128,24 @@ paths:
         formatEN: Nginx conf update [domain]
         formatZH: nginx 配置修改 [domain]
         paramKeys: []
-  /websites/default/html/:type:
+  /websites/default/html/{type}:
     get:
       consumes:
       - application/json
-      description: 获取默认 html
+      parameters:
+      - description: type
+        in: path
+        name: type
+        required: true
+        type: string
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.FileInfo'
+            $ref: '#/definitions/response.WebsiteHtmlRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get default html
       tags:
       - Website
@@ -13971,7 +15153,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新默认 html
       parameters:
       - description: request
         in: body
@@ -13984,6 +15165,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update default html
       tags:
       - Website
@@ -13998,7 +15180,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作网站日志
       parameters:
       - description: request
         in: body
@@ -14011,6 +15192,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Change default server
       tags:
       - Website
@@ -14032,7 +15214,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除网站
       parameters:
       - description: request
         in: body
@@ -14045,6 +15226,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete website
       tags:
       - Website
@@ -14065,7 +15247,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取网站目录配置
       parameters:
       - description: request
         in: body
@@ -14076,8 +15257,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.WebsiteDirConfig'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get website dir
       tags:
       - Website
@@ -14085,7 +15269,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新网站目录权限
       parameters:
       - description: request
         in: body
@@ -14098,6 +15281,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update Site Dir permission
       tags:
       - Website
@@ -14118,7 +15302,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新网站目录
       parameters:
       - description: request
         in: body
@@ -14131,6 +15314,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update Site Dir
       tags:
       - Website
@@ -14151,7 +15335,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建网站 dns
       parameters:
       - description: request
         in: body
@@ -14164,6 +15347,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create website dns account
       tags:
       - Website DNS
@@ -14178,7 +15362,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除网站 dns
       parameters:
       - description: request
         in: body
@@ -14191,6 +15374,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete website dns account
       tags:
       - Website DNS
@@ -14211,7 +15395,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取网站 dns 列表分页
       parameters:
       - description: request
         in: body
@@ -14226,6 +15409,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page website dns accounts
       tags:
       - Website DNS
@@ -14233,7 +15417,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新网站 dns
       parameters:
       - description: request
         in: body
@@ -14246,6 +15429,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update website dns account
       tags:
       - Website DNS
@@ -14260,7 +15444,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建网站域名
       parameters:
       - description: request
         in: body
@@ -14272,9 +15455,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.WebsiteDomain'
+            items:
+              $ref: '#/definitions/model.WebsiteDomain'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create website domain
       tags:
       - Website Domain
@@ -14285,11 +15471,10 @@ paths:
         formatEN: Create domain [domain]
         formatZH: 创建域名 [domain]
         paramKeys: []
-  /websites/domains/:websiteId:
+  /websites/domains/{websiteId}:
     get:
       consumes:
       - application/json
-      description: 通过网站 id 查询域名
       parameters:
       - description: request
         in: path
@@ -14305,6 +15490,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search website domains by websiteId
       tags:
       - Website Domain
@@ -14312,7 +15498,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除网站域名
       parameters:
       - description: request
         in: body
@@ -14325,6 +15510,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete website domain
       tags:
       - Website Domain
@@ -14345,7 +15531,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取防盗链配置
       parameters:
       - description: request
         in: body
@@ -14356,8 +15541,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.NginxAntiLeechRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get AntiLeech conf
       tags:
       - Website
@@ -14365,7 +15553,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新防盗链配置
       parameters:
       - description: request
         in: body
@@ -14378,12 +15565,12 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Update AntiLeech
+      - Timestamp: []
+      summary: Update AntiLeech conf
       tags:
       - Website
   /websites/list:
     get:
-      description: 获取网站列表
       responses:
         "200":
           description: OK
@@ -14393,6 +15580,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List websites
       tags:
       - Website
@@ -14400,7 +15588,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作网站日志
       parameters:
       - description: request
         in: body
@@ -14415,6 +15602,7 @@ paths:
             $ref: '#/definitions/response.WebsiteLog'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate website log
       tags:
       - Website
@@ -14436,7 +15624,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 网站 nginx 配置
       parameters:
       - description: request
         in: body
@@ -14449,6 +15636,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update website nginx conf
       tags:
       - Website Nginx
@@ -14469,7 +15657,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 操作网站
       parameters:
       - description: request
         in: body
@@ -14482,6 +15669,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Operate website
       tags:
       - Website
@@ -14501,16 +15689,16 @@ paths:
         paramKeys: []
   /websites/options:
     get:
-      description: 获取网站列表
       responses:
         "200":
           description: OK
           schema:
             items:
-              type: string
+              $ref: '#/definitions/response.WebsiteOption'
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: List website names
       tags:
       - Website
@@ -14518,7 +15706,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 网站 PHP 配置
       parameters:
       - description: request
         in: body
@@ -14531,6 +15718,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update website php conf
       tags:
       - Website PHP
@@ -14547,11 +15735,10 @@ paths:
         formatEN: '[domain] PHP conf update'
         formatZH: '[domain] PHP 配置修改'
         paramKeys: []
-  /websites/php/config/:id:
+  /websites/php/config/{id}:
     get:
       consumes:
       - application/json
-      description: 获取网站 php 配置
       parameters:
       - description: request
         in: path
@@ -14565,6 +15752,7 @@ paths:
             $ref: '#/definitions/response.PHPConfig'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Load website php conf
       tags:
       - Website
@@ -14572,7 +15760,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 php 配置文件
       parameters:
       - description: request
         in: body
@@ -14585,6 +15772,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update php conf
       tags:
       - Website PHP
@@ -14605,7 +15793,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 变更 php 版本
       parameters:
       - description: request
         in: body
@@ -14618,6 +15805,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update php version
       tags:
       - Website PHP
@@ -14638,7 +15826,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取反向代理配置
       parameters:
       - description: request
         in: body
@@ -14649,16 +15836,53 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/request.WebsiteProxyConfig'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get proxy conf
       tags:
       - Website
+  /websites/proxies/del:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.WebsiteProxyDel'
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      - Timestamp: []
+      summary: Delete proxy conf
+      tags:
+      - Website
+      x-panel-log:
+        BeforeFunctions:
+        - db: websites
+          input_column: id
+          input_value: id
+          isList: false
+          output_column: primary_domain
+          output_value: domain
+        bodyKeys:
+        - id
+        formatEN: Delete domain [domain] proxy config
+        formatZH: 删除网站 [domain] 反向代理配置
+        paramKeys: []
   /websites/proxies/update:
     post:
       consumes:
       - application/json
-      description: 修改反向代理配置
       parameters:
       - description: request
         in: body
@@ -14671,6 +15895,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update proxy conf
       tags:
       - Website
@@ -14691,7 +15916,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新反向代理文件
       parameters:
       - description: request
         in: body
@@ -14704,6 +15928,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update proxy file
       tags:
       - Website
@@ -14724,7 +15949,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取重定向配置
       parameters:
       - description: request
         in: body
@@ -14735,8 +15959,13 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.NginxRedirectConfig'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get redirect conf
       tags:
       - Website
@@ -14744,7 +15973,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新重定向文件
       parameters:
       - description: request
         in: body
@@ -14757,6 +15985,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update redirect file
       tags:
       - Website
@@ -14777,7 +16006,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 修改重定向配置
       parameters:
       - description: request
         in: body
@@ -14790,6 +16018,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update redirect conf
       tags:
       - Website
@@ -14810,7 +16039,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取伪静态配置
       parameters:
       - description: request
         in: body
@@ -14821,8 +16049,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.NginxRewriteRes'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Get rewrite conf
       tags:
       - Website
@@ -14830,7 +16061,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新伪静态配置
       parameters:
       - description: request
         in: body
@@ -14843,6 +16073,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update rewrite conf
       tags:
       - Website
@@ -14863,7 +16094,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取网站列表分页
       parameters:
       - description: request
         in: body
@@ -14878,6 +16108,7 @@ paths:
             $ref: '#/definitions/dto.PageResult'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page websites
       tags:
       - Website
@@ -14885,7 +16116,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建网站 ssl
       parameters:
       - description: request
         in: body
@@ -14900,6 +16130,7 @@ paths:
             $ref: '#/definitions/request.WebsiteSSLCreate'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Create website ssl
       tags:
       - Website SSL
@@ -14910,11 +16141,10 @@ paths:
         formatEN: Create website ssl [primaryDomain]
         formatZH: 创建网站 ssl [primaryDomain]
         paramKeys: []
-  /websites/ssl/:id:
+  /websites/ssl/{id}:
     get:
       consumes:
       - application/json
-      description: 通过 id 查询 ssl
       parameters:
       - description: request
         in: path
@@ -14924,8 +16154,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.WebsiteSSLDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search website ssl by id
       tags:
       - Website SSL
@@ -14933,7 +16166,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 删除网站 ssl
       parameters:
       - description: request
         in: body
@@ -14946,6 +16178,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Delete website ssl
       tags:
       - Website SSL
@@ -14966,7 +16199,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 下载证书文件
       parameters:
       - description: request
         in: body
@@ -14979,7 +16211,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Download SSL  file
+      - Timestamp: []
+      summary: Download SSL file
       tags:
       - Website SSL
       x-panel-log:
@@ -14999,7 +16232,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 申请证书
       parameters:
       - description: request
         in: body
@@ -15012,6 +16244,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Apply  ssl
       tags:
       - Website SSL
@@ -15032,7 +16265,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 解析网站 ssl
       parameters:
       - description: request
         in: body
@@ -15049,6 +16281,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Resolve website ssl
       tags:
       - Website SSL
@@ -15056,7 +16289,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 获取网站 ssl 列表分页
       parameters:
       - description: request
         in: body
@@ -15067,8 +16299,13 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.WebsiteSSLDTO'
+            type: array
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Page website ssl
       tags:
       - Website SSL
@@ -15076,7 +16313,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新 ssl
       parameters:
       - description: request
         in: body
@@ -15089,7 +16325,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Update ssl
+      - Timestamp: []
+      summary: Update Website ssl
       tags:
       - Website SSL
       x-panel-log:
@@ -15109,7 +16346,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 上传 ssl
       parameters:
       - description: request
         in: body
@@ -15122,7 +16358,8 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
-      summary: Upload ssl
+      - Timestamp: []
+      summary: Upload Website ssl
       tags:
       - Website SSL
       x-panel-log:
@@ -15132,11 +16369,10 @@ paths:
         formatEN: Upload ssl [type]
         formatZH: 上传 ssl [type]
         paramKeys: []
-  /websites/ssl/website/:websiteId:
+  /websites/ssl/website/{websiteId}:
     get:
       consumes:
       - application/json
-      description: 通过网站 id 查询 ssl
       parameters:
       - description: request
         in: path
@@ -15146,8 +16382,11 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.WebsiteSSLDTO'
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Search website ssl by website id
       tags:
       - Website SSL
@@ -15155,7 +16394,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新网站
       parameters:
       - description: request
         in: body
@@ -15168,6 +16406,7 @@ paths:
           description: OK
       security:
       - ApiKeyAuth: []
+      - Timestamp: []
       summary: Update website
       tags:
       - Website
@@ -15178,4 +16417,27 @@ paths:
         formatEN: Update website [primaryDomain]
         formatZH: 更新网站 [primaryDomain]
         paramKeys: []
+schemes:
+- http
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    description: |-
+      Custom Token Format, Format: md5('1panel' + API-Key + UnixTimestamp).
+      ```
+      eg:
+      curl -X GET "http://localhost:4004/api/v1/dashboard/current" \
+      -H "1Panel-Token: <1panel_token>" \
+      -H "1Panel-Timestamp: <current_unix_timestamp>"
+      ```
+      - `1Panel-Token` is the key for the panel API Key.
+    in: header
+    name: 1Panel-Token
+    type: apiKey
+  Timestamp:
+    description: '- `1Panel-Timestamp` is the Unix timestamp of the current time in
+      seconds.'
+    in: header
+    name: 1Panel-Timestamp
+    type: apiKey
 swagger: "2.0"

@@ -1,13 +1,13 @@
 import { Layout } from '@/routers/constant';
 
 const hostRouter = {
-    sort: 6,
+    sort: 7,
     path: '/hosts',
     component: Layout,
     redirect: '/hosts/security',
     meta: {
         icon: 'p-host',
-        title: 'menu.host',
+        title: 'menu.system',
     },
     children: [
         {

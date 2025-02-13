@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -92,6 +93,8 @@ func (c *ClamService) LoadBaseInfo() (dto.ClamBaseInfo, error) {
 				baseInfo.Version = strings.TrimPrefix(version, "ClamAV ")
 			}
 		}
+	} else {
+		_ = StopAllCronJob(false)
 	}
 	if baseInfo.FreshIsActive {
 		version, err := cmd.Exec("freshclam --version")
@@ -139,7 +142,7 @@ func (c *ClamService) SearchWithPage(req dto.SearchClamWithPage) (int64, interfa
 		item.LastHandleDate = "-"
 		datas = append(datas, item)
 	}
-	nyc, _ := time.LoadLocation(common.LoadTimeZone())
+	nyc, _ := time.LoadLocation(common.LoadTimeZoneByCmd())
 	for i := 0; i < len(datas); i++ {
 		logPaths := loadFileByName(datas[i].Name)
 		sort.Slice(logPaths, func(i, j int) bool {
@@ -151,6 +154,16 @@ func (c *ClamService) SearchWithPage(req dto.SearchClamWithPage) (int64, interfa
 				continue
 			}
 			datas[i].LastHandleDate = t1.Format(constant.DateTimeLayout)
+		}
+		alertBase := dto.AlertBase{
+			AlertType: "clams",
+			EntryID:   datas[i].ID,
+		}
+		alertCount := xpack.GetAlert(alertBase)
+		if alertCount != 0 {
+			datas[i].AlertCount = alertCount
+		} else {
+			datas[i].AlertCount = 0
 		}
 	}
 	return total, datas, err
@@ -177,6 +190,19 @@ func (c *ClamService) Create(req dto.ClamCreate) error {
 	}
 	if err := clamRepo.Create(&clam); err != nil {
 		return err
+	}
+
+	if req.AlertCount != 0 {
+		createAlert := dto.CreateOrUpdateAlert{
+			AlertTitle: req.AlertTitle,
+			AlertCount: req.AlertCount,
+			AlertType:  "clams",
+			EntryID:    clam.ID,
+		}
+		err := xpack.CreateAlert(createAlert)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -223,6 +249,16 @@ func (c *ClamService) Update(req dto.ClamUpdate) error {
 	if err := clamRepo.Update(req.ID, upMap); err != nil {
 		return err
 	}
+	updateAlert := dto.CreateOrUpdateAlert{
+		AlertTitle: req.AlertTitle,
+		AlertType:  "clams",
+		AlertCount: req.AlertCount,
+		EntryID:    clam.ID,
+	}
+	err := xpack.UpdateAlert(updateAlert)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -263,12 +299,20 @@ func (c *ClamService) Delete(req dto.ClamDelete) error {
 		if err := clamRepo.Delete(commonRepo.WithByID(id)); err != nil {
 			return err
 		}
+		alertBase := dto.AlertBase{
+			AlertType: "clams",
+			EntryID:   clam.ID,
+		}
+		err := xpack.DeleteAlert(alertBase)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (c *ClamService) HandleOnce(req dto.OperateByID) error {
-	if cmd.Which("clamdscan") == false {
+	if cleaned := StopAllCronJob(true); cleaned {
 		return buserr.New("ErrClamdscanNotFound")
 	}
 	clam, _ := clamRepo.Get(commonRepo.WithByID(req.ID))
@@ -303,6 +347,7 @@ func (c *ClamService) HandleOnce(req dto.OperateByID) error {
 		}
 		global.LOG.Debugf("clamdscan --fdpass %s %s -l %s", strategy, clam.Path, logFile)
 		stdout, err := cmd.Execf("clamdscan --fdpass %s %s -l %s", strategy, clam.Path, logFile)
+		handleAlert(stdout, clam.Name, clam.ID)
 		if err != nil {
 			global.LOG.Errorf("clamdscan failed, stdout: %v, err: %v", stdout, err)
 		}
@@ -321,7 +366,7 @@ func (c *ClamService) LoadRecords(req dto.ClamLogSearch) (int64, interface{}, er
 	}
 
 	var filterFiles []string
-	nyc, _ := time.LoadLocation(common.LoadTimeZone())
+	nyc, _ := time.LoadLocation(common.LoadTimeZoneByCmd())
 	for _, item := range logPaths {
 		t1, err := time.ParseInLocation(constant.DateTimeSlimLayout, item, nyc)
 		if err != nil {
@@ -473,6 +518,29 @@ func (c *ClamService) UpdateFile(req dto.UpdateByNameAndFile) error {
 	return nil
 }
 
+func StopAllCronJob(withCheck bool) bool {
+	if withCheck {
+		isActive := false
+		exist1, _ := systemctl.IsExist(clamServiceNameCentOs)
+		if exist1 {
+			isActive, _ = systemctl.IsActive(clamServiceNameCentOs)
+		}
+		exist2, _ := systemctl.IsExist(clamServiceNameUbuntu)
+		if exist2 {
+			isActive, _ = systemctl.IsActive(clamServiceNameUbuntu)
+		}
+		if isActive {
+			return false
+		}
+	}
+	clams, _ := clamRepo.List(commonRepo.WithByStatus(constant.StatusEnable))
+	for i := 0; i < len(clams); i++ {
+		global.Cron.Remove(cron.EntryID(clams[i].EntryID))
+		_ = clamRepo.Update(clams[i].ID, map[string]interface{}{"status": constant.StatusDisable, "entry_id": 0})
+	}
+	return true
+}
+
 func loadFileByName(name string) []string {
 	var logPaths []string
 	pathItem := path.Join(global.CONF.System.DataDir, resultDir, name)
@@ -559,4 +627,28 @@ func (c *ClamService) loadLogPath(name string) string {
 	}
 
 	return ""
+}
+
+func handleAlert(stdout, clamName string, clamId uint) {
+	if strings.Contains(stdout, "- SCAN SUMMARY -") {
+		lines := strings.Split(stdout, "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "Infected files: ") {
+				infectedFiles, _ := strconv.Atoi(strings.TrimPrefix(line, "Infected files: "))
+				if infectedFiles > 0 {
+					pushAlert := dto.PushAlert{
+						TaskName:  clamName,
+						AlertType: "clams",
+						EntryID:   clamId,
+						Param:     strconv.Itoa(infectedFiles),
+					}
+					err := xpack.PushAlert(pushAlert)
+					if err != nil {
+						global.LOG.Errorf("clamdscan push failed, err: %v", err)
+					}
+					break
+				}
+			}
+		}
+	}
 }

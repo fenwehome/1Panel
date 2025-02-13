@@ -2,9 +2,11 @@
     <div v-loading="loading">
         <div class="app-status" style="margin-top: 20px" v-if="currentDB && currentDB.from === 'remote'">
             <el-card>
-                <div>
-                    <el-tag style="float: left" effect="dark" type="success">Redis</el-tag>
-                    <el-tag class="status-content">{{ $t('app.version') }}: {{ currentDB?.version }}</el-tag>
+                <div class="flex w-full flex-col gap-4 md:flex-row">
+                    <div class="flex flex-wrap gap-4">
+                        <el-tag style="float: left" effect="dark" type="success">Redis</el-tag>
+                        <el-tag>{{ $t('app.version') }}: {{ currentDB?.version }}</el-tag>
+                    </div>
                 </div>
             </el-card>
         </div>
@@ -17,6 +19,7 @@
                     @before="onBefore"
                     @after="onAfter"
                     @setting="onSetting"
+                    ref="appStatusRef"
                 ></AppStatus>
             </template>
             <template #search v-if="!isOnSetting && currentDB">
@@ -51,12 +54,16 @@
                 </el-select>
             </template>
             <template #toolbar v-if="!isOnSetting">
-                <el-button v-if="currentDB" type="primary" plain @click="onLoadConn">
-                    {{ $t('database.databaseConnInfo') }}
-                </el-button>
-                <el-button @click="goRemoteDB" type="primary" plain>
-                    {{ $t('database.remoteDB') }}
-                </el-button>
+                <div class="flex justify-between gap-2 flex-wrap sm:flex-row">
+                    <div class="flex flex-wrap gap-3">
+                        <el-button v-if="currentDB" type="primary" plain @click="onLoadConn">
+                            {{ $t('database.databaseConnInfo') }}
+                        </el-button>
+                        <el-button @click="goRemoteDB" type="primary" plain>
+                            {{ $t('database.manageRemoteDB') }}
+                        </el-button>
+                    </div>
+                </div>
             </template>
         </LayoutContent>
 
@@ -89,18 +96,18 @@
         </div>
 
         <div v-if="dbOptionsLocal.length === 0 && dbOptionsRemote.length === 0">
-            <LayoutContent :title="'Redis ' + $t('menu.database')" :divider="true">
+            <LayoutContent :title="'Redis ' + $t('menu.database').toLowerCase()" :divider="true">
                 <template #main>
                     <div class="app-warn">
-                        <div>
+                        <div class="flex flex-col gap-2 items-center justify-center w-full sm:flex-row">
                             <span>{{ $t('app.checkInstalledWarn', ['Redis']) }}</span>
-                            <span @click="goRouter('app')">
-                                <el-icon class="ml-2"><Position /></el-icon>
+                            <span @click="goRouter('app')" class="flex items-center justify-center gap-0.5">
+                                <el-icon><Position /></el-icon>
                                 {{ $t('database.goInstall') }}
                             </span>
-                            <div>
-                                <img src="@/assets/images/no_app.svg" />
-                            </div>
+                        </div>
+                        <div>
+                            <img src="@/assets/images/no_app.svg" />
                         </div>
                     </div>
                 </template>
@@ -116,11 +123,12 @@
             :close-on-click-modal="false"
             :destroy-on-close="true"
         >
-            <el-alert :closable="false" :title="$t('app.checkInstalledWarn', ['Redis-Commander'])" type="info">
+            <div class="flex justify-center items-center gap-2 flex-wrap">
+                {{ $t('app.checkInstalledWarn', ['Redis-Commander']) }}
                 <el-link icon="Position" @click="getAppDetail('redis-commander')" type="primary">
                     {{ $t('database.goInstall') }}
                 </el-link>
-            </el-alert>
+            </div>
             <template #footer>
                 <span class="dialog-footer">
                     <el-button @click="commandVisible = false">{{ $t('commons.button.cancel') }}</el-button>
@@ -158,6 +166,7 @@ const redisIsExist = ref(false);
 const redisStatus = ref();
 const terminalShow = ref(false);
 
+const appStatusRef = ref();
 const commandVisible = ref(false);
 
 const redisCliExist = ref();
@@ -204,6 +213,10 @@ const onLoadConn = async () => {
         database: currentDBName.value,
     });
 };
+//
+// const mobile = computed(() => {
+//     return globalStore.isMobile();
+// });
 
 const goRouter = async (target: string) => {
     if (target === 'app') {
@@ -219,6 +232,7 @@ const changeDatabase = async () => {
             currentDB.value = item;
             appKey.value = item.type;
             appName.value = item.database;
+            appStatusRef.value?.onCheck(appKey.value, appName.value);
             reOpenTerminal();
             return;
         }

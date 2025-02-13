@@ -1,9 +1,9 @@
 <template>
     <div>
-        <LayoutContent v-loading="loading" v-if="!isRecordShow" :title="$t('setting.snapshot')">
+        <LayoutContent v-loading="loading" v-if="!isRecordShow" :title="$t('setting.snapshot', 2)">
             <template #toolbar>
-                <el-row>
-                    <el-col :xs="24" :sm="16" :md="16" :lg="16" :xl="16">
+                <div class="flex justify-between gap-2 flex-wrap sm:flex-row">
+                    <div class="flex flex-wrap gap-3">
                         <el-button type="primary" @click="onCreate()">
                             {{ $t('setting.createSnapshot') }}
                         </el-button>
@@ -11,23 +11,24 @@
                             {{ $t('setting.importSnapshot') }}
                         </el-button>
                         <el-button type="primary" plain @click="onIgnore()">
-                            {{ $t('setting.ignoreRule') }}
+                            {{ $t('setting.editIgnoreRule') }}
                         </el-button>
                         <el-button type="primary" plain :disabled="selects.length === 0" @click="batchDelete(null)">
                             {{ $t('commons.button.delete') }}
                         </el-button>
-                    </el-col>
-                    <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+                    </div>
+                    <div class="flex flex-wrap gap-3">
                         <TableSetting ref="timerRef" @search="search()" />
                         <TableSearch @search="search()" v-model:searchName="searchName" />
-                    </el-col>
-                </el-row>
+                    </div>
+                </div>
             </template>
             <template #main>
                 <ComplexTable
                     :pagination-config="paginationConfig"
                     v-model:selects="selects"
                     :data="data"
+                    @sort-change="search"
                     style="margin-top: 20px"
                     @search="search"
                 >
@@ -37,6 +38,7 @@
                         :label="$t('commons.table.name')"
                         min-width="100"
                         prop="name"
+                        sortable
                         fix
                     />
                     <el-table-column prop="version" :label="$t('app.version')" />
@@ -73,10 +75,15 @@
                     </el-table-column>
                     <el-table-column :label="$t('file.size')" prop="size" min-width="60" show-overflow-tooltip>
                         <template #default="{ row }">
-                            <span v-if="row.size">
-                                {{ computeSize(row.size) }}
-                            </span>
-                            <span v-else>-</span>
+                            <div v-if="row.hasLoad">
+                                <span v-if="row.size">
+                                    {{ computeSize(row.size) }}
+                                </span>
+                                <span v-else>-</span>
+                            </div>
+                            <div v-if="!row.hasLoad">
+                                <el-button link loading></el-button>
+                            </div>
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('commons.table.status')" min-width="80" prop="status">
@@ -103,7 +110,8 @@
                         </template>
                     </el-table-column>
                     <el-table-column
-                        prop="createdAt"
+                        prop="created_at"
+                        sortable
                         :label="$t('commons.table.date')"
                         :formatter="dateFormat"
                         show-overflow-tooltip
@@ -194,7 +202,13 @@
 
 <script setup lang="ts">
 import DrawerHeader from '@/components/drawer-header/index.vue';
-import { snapshotCreate, searchSnapshotPage, snapshotDelete, updateSnapshotDescription } from '@/api/modules/setting';
+import {
+    snapshotCreate,
+    searchSnapshotPage,
+    snapshotDelete,
+    updateSnapshotDescription,
+    loadSnapshotSize,
+} from '@/api/modules/setting';
 import { onMounted, reactive, ref } from 'vue';
 import { computeSize, dateFormat } from '@/utils/util';
 import { ElForm } from 'element-plus';
@@ -216,6 +230,8 @@ const paginationConfig = reactive({
     currentPage: 1,
     pageSize: 10,
     total: 0,
+    orderBy: 'created_at',
+    order: 'null',
 });
 const searchName = ref();
 
@@ -399,19 +415,46 @@ const buttons = [
     },
 ];
 
-const search = async () => {
+const search = async (column?: any) => {
+    paginationConfig.orderBy = column?.order ? column.prop : paginationConfig.orderBy;
+    paginationConfig.order = column?.order ? column.order : paginationConfig.order;
     let params = {
         info: searchName.value,
         page: paginationConfig.currentPage,
         pageSize: paginationConfig.pageSize,
+        orderBy: paginationConfig.orderBy,
+        order: paginationConfig.order,
     };
     loading.value = true;
     await searchSnapshotPage(params)
         .then((res) => {
             loading.value = false;
+            loadSize(params);
             cleanData.value = false;
             data.value = res.data.items || [];
             paginationConfig.total = res.data.total;
+        })
+        .catch(() => {
+            loading.value = false;
+        });
+};
+
+const loadSize = async (params: any) => {
+    await loadSnapshotSize(params)
+        .then((res) => {
+            let stats = res.data || [];
+            if (stats.length === 0) {
+                return;
+            }
+            for (const snap of data.value) {
+                for (const item of stats) {
+                    if (snap.id === item.id) {
+                        snap.hasLoad = true;
+                        snap.size = item.size;
+                        break;
+                    }
+                }
+            }
         })
         .catch(() => {
             loading.value = false;

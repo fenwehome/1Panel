@@ -66,7 +66,7 @@
                                     placeholder="#Define or paste the content of your docker-compose file here"
                                     :indent-with-tab="true"
                                     :tabSize="4"
-                                    style="width: 100%; height: calc(100vh - 376px)"
+                                    style="width: 100%; height: calc(100vh - 400px)"
                                     :lineWrapping="true"
                                     :matchBrackets="true"
                                     theme="cobalt"
@@ -86,6 +86,27 @@
                                 />
                             </div>
                         </el-form-item>
+                        <el-form-item :label="$t('container.env')" prop="envStr">
+                            <el-input
+                                type="textarea"
+                                :placeholder="$t('container.tagHelper')"
+                                :rows="3"
+                                v-model="form.envStr"
+                            />
+                        </el-form-item>
+                        <span class="input-help whitespace-break-spaces">{{ $t('container.editComposeHelper') }}</span>
+                        <codemirror
+                            v-model="form.envFileContent"
+                            :autofocus="true"
+                            :indent-with-tab="true"
+                            :tabSize="4"
+                            :lineWrapping="true"
+                            :disabled="true"
+                            :matchBrackets="true"
+                            theme="cobalt"
+                            :styleActiveLine="true"
+                            :extensions="extensions"
+                        ></codemirror>
                     </el-form>
                 </el-col>
             </el-row>
@@ -114,10 +135,10 @@ import DrawerHeader from '@/components/drawer-header/index.vue';
 import { listComposeTemplate, testCompose, upCompose } from '@/api/modules/container';
 import { loadBaseDir } from '@/api/modules/setting';
 import { MsgError } from '@/utils/message';
-import { javascript } from '@codemirror/lang-javascript';
+import { yaml } from '@codemirror/lang-yaml';
 import { oneDark } from '@codemirror/theme-one-dark';
 
-const extensions = [javascript(), oneDark];
+const extensions = [yaml(), oneDark];
 
 const showLog = ref(false);
 const loading = ref();
@@ -143,9 +164,12 @@ const form = reactive({
     path: '',
     file: '',
     template: null as number,
+    env: [],
+    envStr: '',
+    envFileContent: `env_file:\n  - 1panel.env`,
 });
 const rules = reactive({
-    name: [Rules.requiredInput, Rules.imageName],
+    name: [Rules.requiredInput, Rules.composeName],
     path: [Rules.requiredInput],
     template: [Rules.requiredSelect],
 });
@@ -163,6 +187,8 @@ const acceptParams = (): void => {
     form.path = '';
     form.file = '';
     form.template = null;
+    form.envStr = '';
+    form.env = [];
     loadTemplates();
     loadPath();
     isStartReading.value = false;
@@ -241,6 +267,9 @@ const onSubmit = async (formEl: FormInstance | undefined) => {
         if ((form.from === 'edit' || form.from === 'template') && form.file.length === 0) {
             MsgError(i18n.global.t('container.contentEmpty'));
             return;
+        }
+        if (form.envStr) {
+            form.env = form.envStr.split('\n');
         }
         loading.value = true;
         await testCompose(form)

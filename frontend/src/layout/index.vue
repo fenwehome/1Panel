@@ -2,7 +2,7 @@
     <div :class="classObj" class="app-wrapper" v-loading="loading" :element-loading-text="loadingText" fullscreen>
         <div v-if="classObj.mobile && classObj.openSidebar" class="drawer-bg" @click="handleClickOutside" />
         <div class="app-sidebar" v-if="!globalStore.isFullScreen">
-            <Sidebar @menu-click="handleMenuClick" :menu-router="!classObj.openMenuTabs" />
+            <Sidebar @menu-click="handleMenuClick" />
         </div>
 
         <div class="main-container">
@@ -100,7 +100,7 @@ onMounted(() => {
 
     loadStatus();
     loadProductProFromDB();
-
+    globalStore.isFullScreen = false;
     const mqList = window.matchMedia('(prefers-color-scheme: dark)');
     if (mqList.addEventListener) {
         mqList.addEventListener('change', () => {
@@ -137,7 +137,7 @@ onMounted(() => {
     height: 100vh;
     transition: margin-left 0.3s;
     margin-left: var(--panel-menu-width);
-    background-color: #f4f4f4;
+    background-color: var(--panel-main-bg-color-9);
     overflow-x: hidden;
 }
 .app-main {

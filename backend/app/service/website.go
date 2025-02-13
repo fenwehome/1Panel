@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/1Panel-dev/1Panel/backend/utils/docker"
 	"os"
 	"path"
 	"reflect"
@@ -86,13 +87,18 @@ type IWebsiteService interface {
 	LoadWebsiteDirConfig(req request.WebsiteCommonReq) (*response.WebsiteDirConfig, error)
 	UpdateSiteDir(req request.WebsiteUpdateDir) error
 	UpdateSitePermission(req request.WebsiteUpdateDirPermission) error
+
 	OperateProxy(req request.WebsiteProxyConfig) (err error)
 	GetProxies(id uint) (res []request.WebsiteProxyConfig, err error)
 	UpdateProxyFile(req request.NginxProxyUpdate) (err error)
+	DeleteProxy(req request.WebsiteProxyDel) (err error)
+
 	GetAuthBasics(req request.NginxAuthReq) (res response.NginxAuthRes, err error)
 	UpdateAuthBasic(req request.NginxAuthUpdate) (err error)
+
 	GetAntiLeech(id uint) (*response.NginxAntiLeechRes, error)
 	UpdateAntiLeech(req request.NginxAntiLeechUpdate) (err error)
+
 	OperateRedirect(req request.NginxRedirectReq) (err error)
 	GetRedirect(id uint) (res []response.NginxRedirectConfig, err error)
 	UpdateRedirectFile(req request.NginxRedirectUpdate) (err error)
@@ -139,8 +145,10 @@ func (w WebsiteService) PageWebsite(req request.WebsiteSearch) (int64, []respons
 	}
 	for _, web := range websites {
 		var (
-			appName     string
-			runtimeName string
+			appName      string
+			runtimeName  string
+			runtimeType  string
+			appInstallID uint
 		)
 		switch web.Type {
 		case constant.Deployment:
@@ -149,12 +157,15 @@ func (w WebsiteService) PageWebsite(req request.WebsiteSearch) (int64, []respons
 				return 0, nil, err
 			}
 			appName = appInstall.Name
+			appInstallID = appInstall.ID
 		case constant.Runtime:
 			runtime, err := runtimeRepo.GetFirst(commonRepo.WithByID(web.RuntimeID))
 			if err != nil {
 				return 0, nil, err
 			}
 			runtimeName = runtime.Name
+			runtimeType = runtime.Type
+			appInstallID = runtime.ID
 		}
 		sitePath := path.Join(constant.AppInstallDir, constant.AppOpenresty, nginxInstall.Name, "www", "sites", web.Alias)
 
@@ -173,6 +184,8 @@ func (w WebsiteService) PageWebsite(req request.WebsiteSearch) (int64, []respons
 			SSLStatus:     checkSSLStatus(web.WebsiteSSL.ExpireDate),
 			RuntimeName:   runtimeName,
 			SitePath:      sitePath,
+			AppInstallID:  appInstallID,
+			RuntimeType:   runtimeType,
 		})
 	}
 	return total, websiteDTOs, nil
@@ -305,6 +318,9 @@ func (w WebsiteService) CreateWebsite(create request.WebsiteCreate) (err error) 
 		switch runtime.Type {
 		case constant.RuntimePHP:
 			if runtime.Resource == constant.ResourceAppstore {
+				if !checkImageLike(runtime.Image) {
+					return buserr.WithName("ErrImageNotExist", runtime.Name)
+				}
 				var (
 					req     request.AppInstallCreate
 					install *model.AppInstall
@@ -336,7 +352,7 @@ func (w WebsiteService) CreateWebsite(create request.WebsiteCreate) (err error) 
 				}
 				website.Proxy = proxy
 			}
-		case constant.RuntimeNode, constant.RuntimeJava, constant.RuntimeGo:
+		case constant.RuntimeNode, constant.RuntimeJava, constant.RuntimeGo, constant.RuntimePython, constant.RuntimeDotNet:
 			website.Proxy = fmt.Sprintf("127.0.0.1:%d", runtime.Port)
 		}
 	}
@@ -471,7 +487,9 @@ func (w WebsiteService) DeleteWebsite(req request.WebsiteDelete) error {
 	tx, ctx := helper.GetTxAndContext()
 	defer tx.Rollback()
 
-	go NewIBackupService().DeleteRecordByName("website", website.PrimaryDomain, website.Alias, req.DeleteBackup)
+	go func() {
+		_ = NewIBackupService().DeleteRecordByName("website", website.PrimaryDomain, website.Alias, req.DeleteBackup)
+	}()
 	if err := websiteRepo.DeleteBy(ctx, commonRepo.WithByID(req.ID)); err != nil {
 		return err
 	}
@@ -623,8 +641,10 @@ func (w WebsiteService) DeleteWebsiteDomain(domainId uint) error {
 				wafSite := wafWebsite
 				oldDomains := wafSite.Domains
 				var newDomains []string
+				removed := false
 				for _, domain := range oldDomains {
-					if domain == webSiteDomain.Domain {
+					if domain == webSiteDomain.Domain && !removed {
+						removed = true
 						continue
 					}
 					newDomains = append(newDomains, domain)
@@ -1032,19 +1052,19 @@ func (w WebsiteService) OpWebsiteLog(req request.WebsiteLogReq) (*response.Websi
 		res.Content = strings.Join(lines, "\n")
 		return res, nil
 	case constant.DisableLog:
-		key := "access_log"
+		params := dto.NginxParam{}
 		switch req.LogType {
 		case constant.AccessLog:
+			params.Name = "access_log"
+			params.Params = []string{"off"}
 			website.AccessLog = false
 		case constant.ErrorLog:
-			key = "error_log"
+			params.Name = "error_log"
+			params.Params = []string{"/dev/null", "crit"}
 			website.ErrorLog = false
 		}
 		var nginxParams []dto.NginxParam
-		nginxParams = append(nginxParams, dto.NginxParam{
-			Name:   key,
-			Params: []string{"off"},
-		})
+		nginxParams = append(nginxParams, params)
 
 		if err := updateNginxConfig(constant.NginxScopeServer, nginxParams, &website); err != nil {
 			return nil, err
@@ -1323,6 +1343,14 @@ func (w WebsiteService) ChangePHPVersion(req request.WebsitePHPVersionReq) error
 	if runtime.Resource == constant.ResourceLocal || oldRuntime.Resource == constant.ResourceLocal {
 		return buserr.New("ErrPHPResource")
 	}
+	client, err := docker.NewDockerClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	if !checkImageExist(client, runtime.Image) {
+		return buserr.WithName("ErrImageNotExist", runtime.Name)
+	}
 	appInstall, err := appInstallRepo.GetFirst(commonRepo.WithByID(website.AppInstallID))
 	if err != nil {
 		return err
@@ -1530,6 +1558,29 @@ func (w WebsiteService) UpdateSitePermission(req request.WebsiteUpdateDirPermiss
 	return websiteRepo.Save(context.Background(), &website)
 }
 
+func (w WebsiteService) DeleteProxy(req request.WebsiteProxyDel) (err error) {
+	fileOp := files.NewFileOp()
+	website, err := websiteRepo.GetFirst(commonRepo.WithByID(req.ID))
+	if err != nil {
+		return
+	}
+	nginxInstall, err := getAppInstallByKey(constant.AppOpenresty)
+	if err != nil {
+		return
+	}
+	includeDir := path.Join(nginxInstall.GetPath(), "www", "sites", website.Alias, "proxy")
+	if !fileOp.Stat(includeDir) {
+		_ = fileOp.CreateDir(includeDir, 0755)
+	}
+	fileName := fmt.Sprintf("%s.conf", req.Name)
+	includePath := path.Join(includeDir, fileName)
+	backName := fmt.Sprintf("%s.bak", req.Name)
+	backPath := path.Join(includeDir, backName)
+	_ = fileOp.DeleteFile(includePath)
+	_ = fileOp.DeleteFile(backPath)
+	return updateNginxConfig(constant.NginxScopeServer, nil, &website)
+}
+
 func (w WebsiteService) OperateProxy(req request.WebsiteProxyConfig) (err error) {
 	var (
 		website      model.Website
@@ -1647,6 +1698,9 @@ func (w WebsiteService) OperateProxy(req request.WebsiteProxyConfig) (err error)
 	}
 	if req.SNI {
 		location.UpdateDirective("proxy_ssl_server_name", []string{"on"})
+		if req.ProxySSLName != "" {
+			location.UpdateDirective("proxy_ssl_name", []string{req.ProxySSLName})
+		}
 	} else {
 		location.UpdateDirective("proxy_ssl_server_name", []string{"off"})
 	}
@@ -1728,6 +1782,9 @@ func (w WebsiteService) GetProxies(id uint) (res []request.WebsiteProxyConfig, e
 		for _, directive := range location.Directives {
 			if directive.GetName() == "proxy_ssl_server_name" {
 				proxyConfig.SNI = directive.GetParameters()[0] == "on"
+			}
+			if directive.GetName() == "proxy_ssl_name" {
+				proxyConfig.ProxySSLName = directive.GetParameters()[0]
 			}
 		}
 		res = append(res, proxyConfig)
@@ -2014,7 +2071,19 @@ func (w WebsiteService) UpdateAntiLeech(req request.NginxAntiLeechUpdate) (err e
 		}
 		newBlock.Directives = append(newBlock.Directives, ifDir)
 		newDirective.Block = newBlock
-		block.Directives = append(block.Directives, &newDirective)
+
+		index := -1
+		for i, directive := range block.Directives {
+			if directive.GetName() == "include" {
+				index = i
+				break
+			}
+		}
+		if index != -1 {
+			block.Directives = append(block.Directives[:index], append([]components.IDirective{&newDirective}, block.Directives[index:]...)...)
+		} else {
+			block.Directives = append(block.Directives, &newDirective)
+		}
 	}
 
 	if err = nginx.WriteConfig(nginxFull.SiteConfig.Config, nginx.IndentedStyle); err != nil {

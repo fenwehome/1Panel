@@ -187,7 +187,7 @@ func (u *ContainerService) Page(req dto.PageContainer) (int64, interface{}, erro
 			IsFromApp = true
 		}
 
-		ports := loadContainerPort(item.Ports)
+		exposePorts := transPortToStr(records[i].Ports)
 		info := dto.ContainerInfo{
 			ContainerID:   item.ID,
 			CreateTime:    time.Unix(item.Created, 0).Format(constant.DateTimeLayout),
@@ -196,7 +196,7 @@ func (u *ContainerService) Page(req dto.PageContainer) (int64, interface{}, erro
 			ImageName:     item.Image,
 			State:         item.State,
 			RunTime:       item.Status,
-			Ports:         ports,
+			Ports:         exposePorts,
 			IsFromApp:     IsFromApp,
 			IsFromCompose: IsFromCompose,
 		}
@@ -445,6 +445,8 @@ func (u *ContainerService) ContainerInfo(req dto.OperationWithName) (*dto.Contai
 		}
 	}
 
+	exposePorts, _ := loadPortByInspect(oldContainer.ID, client)
+	data.ExposedPorts = loadContainerPortForInfo(exposePorts)
 	networkSettings := oldContainer.NetworkSettings
 	bridgeNetworkSettings := networkSettings.Networks[data.Network]
 	if bridgeNetworkSettings.IPAMConfig != nil {
@@ -465,19 +467,7 @@ func (u *ContainerService) ContainerInfo(req dto.OperationWithName) (*dto.Contai
 	for key, val := range oldContainer.Config.Labels {
 		data.Labels = append(data.Labels, fmt.Sprintf("%s=%s", key, val))
 	}
-	for key, val := range oldContainer.HostConfig.PortBindings {
-		var itemPort dto.PortHelper
-		if !strings.Contains(string(key), "/") {
-			continue
-		}
-		itemPort.ContainerPort = strings.Split(string(key), "/")[0]
-		itemPort.Protocol = strings.Split(string(key), "/")[1]
-		for _, binds := range val {
-			itemPort.HostIP = binds.HostIP
-			itemPort.HostPort = binds.HostPort
-			data.ExposedPorts = append(data.ExposedPorts, itemPort)
-		}
-	}
+
 	data.AutoRemove = oldContainer.HostConfig.AutoRemove
 	data.Privileged = oldContainer.HostConfig.Privileged
 	data.PublishAllPorts = oldContainer.HostConfig.PublishAllPorts
@@ -908,6 +898,10 @@ func (u *ContainerService) LoadContainerLogs(req dto.OperationWithNameAndType) s
 				break
 			}
 		}
+		if len(containers) == 0 {
+			composeItem, _ := composeRepo.GetRecord(commonRepo.WithByName(req.Name))
+			filePath = composeItem.Path
+		}
 	}
 	if _, err := os.Stat(filePath); err != nil {
 		return ""
@@ -982,6 +976,25 @@ func checkImageExist(client *client.Client, imageItem string) bool {
 	for _, img := range images {
 		for _, tag := range img.RepoTags {
 			if tag == imageItem || tag == imageItem+":latest" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func checkImageLike(imageName string) bool {
+	cli, err := docker.NewDockerClient()
+	if err != nil {
+		return false
+	}
+	images, err := cli.ImageList(context.Background(), image.ListOptions{})
+	if err != nil {
+		return false
+	}
+	for _, img := range images {
+		for _, tag := range img.RepoTags {
+			if strings.Contains(tag, imageName) {
 				return true
 			}
 		}
@@ -1201,7 +1214,7 @@ func reCreateAfterUpdate(name string, client *client.Client, config *container.C
 	if err := client.ContainerStart(ctx, oldContainer.ID, container.StartOptions{}); err != nil {
 		global.LOG.Errorf("restart after container update failed, err: %v", err)
 	}
-	global.LOG.Errorf("recreate after container update successful")
+	global.LOG.Info("recreate after container update successful")
 }
 
 func loadVolumeBinds(binds []types.MountPoint) []dto.VolumeHelper {
@@ -1224,7 +1237,65 @@ func loadVolumeBinds(binds []types.MountPoint) []dto.VolumeHelper {
 	return datas
 }
 
-func loadContainerPort(ports []types.Port) []string {
+func loadPortByInspect(id string, client *client.Client) ([]types.Port, error) {
+	container, err := client.ContainerInspect(context.Background(), id)
+	if err != nil {
+		return nil, err
+	}
+	var itemPorts []types.Port
+	for key, val := range container.ContainerJSONBase.HostConfig.PortBindings {
+		if !strings.Contains(string(key), "/") {
+			continue
+		}
+		item := strings.Split(string(key), "/")
+		itemPort, _ := strconv.ParseUint(item[0], 10, 16)
+
+		for _, itemVal := range val {
+			publicPort, _ := strconv.ParseUint(itemVal.HostPort, 10, 16)
+			itemPorts = append(itemPorts, types.Port{PrivatePort: uint16(itemPort), Type: item[1], PublicPort: uint16(publicPort), IP: itemVal.HostIP})
+		}
+	}
+	return itemPorts, nil
+}
+
+func loadContainerPortForInfo(itemPorts []types.Port) []dto.PortHelper {
+	var exposedPorts []dto.PortHelper
+	samePortMap := make(map[string]dto.PortHelper)
+	ports := transPortToStr(itemPorts)
+	var itemPort dto.PortHelper
+	for _, item := range ports {
+		itemStr := strings.Split(item, "->")
+		if len(itemStr) < 2 {
+			continue
+		}
+		lastIndex := strings.LastIndex(itemStr[0], ":")
+		if lastIndex == -1 {
+			itemPort.HostPort = itemStr[0]
+		} else {
+			itemPort.HostIP = itemStr[0][0:lastIndex]
+			itemPort.HostPort = itemStr[0][lastIndex+1:]
+		}
+		itemContainer := strings.Split(itemStr[1], "/")
+		if len(itemContainer) != 2 {
+			continue
+		}
+		itemPort.ContainerPort = itemContainer[0]
+		itemPort.Protocol = itemContainer[1]
+		keyItem := fmt.Sprintf("%s->%s/%s", itemPort.HostPort, itemPort.ContainerPort, itemPort.Protocol)
+		if val, ok := samePortMap[keyItem]; ok {
+			val.HostIP = ""
+			samePortMap[keyItem] = val
+		} else {
+			samePortMap[keyItem] = itemPort
+		}
+	}
+	for _, val := range samePortMap {
+		exposedPorts = append(exposedPorts, val)
+	}
+	return exposedPorts
+}
+
+func transPortToStr(ports []types.Port) []string {
 	var (
 		ipv4Ports []types.Port
 		ipv6Ports []types.Port

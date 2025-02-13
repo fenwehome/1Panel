@@ -30,6 +30,7 @@ type SettingInfo struct {
 	ServerPort             string `json:"serverPort"`
 	SSL                    string `json:"ssl"`
 	SSLType                string `json:"sslType"`
+	AutoRestart            string `json:"autoRestart"`
 	BindDomain             string `json:"bindDomain"`
 	AllowIPs               string `json:"allowIPs"`
 	SecurityEntrance       string `json:"securityEntrance"`
@@ -65,6 +66,11 @@ type SettingInfo struct {
 	ProxyUser       string `json:"proxyUser"`
 	ProxyPasswd     string `json:"proxyPasswd"`
 	ProxyPasswdKeep string `json:"proxyPasswdKeep"`
+
+	ApiInterfaceStatus string `json:"apiInterfaceStatus"`
+	ApiKey             string `json:"apiKey"`
+	IpWhiteList        string `json:"ipWhiteList"`
+	ApiKeyValidityTime string `json:"apiKeyValidityTime"`
 }
 
 type SettingUpdate struct {
@@ -73,12 +79,13 @@ type SettingUpdate struct {
 }
 
 type SSLUpdate struct {
-	SSLType string `json:"sslType" validate:"required,oneof=self select import import-paste import-local"`
-	Domain  string `json:"domain"`
-	SSL     string `json:"ssl" validate:"required,oneof=enable disable"`
-	Cert    string `json:"cert"`
-	Key     string `json:"key"`
-	SSLID   uint   `json:"sslID"`
+	SSLType     string `json:"sslType" validate:"required,oneof=self select import import-paste import-local"`
+	Domain      string `json:"domain"`
+	SSL         string `json:"ssl" validate:"required,oneof=enable disable"`
+	Cert        string `json:"cert"`
+	Key         string `json:"key"`
+	SSLID       uint   `json:"sslID"`
+	AutoRestart string `json:"autoRestart"`
 }
 type SSLInfo struct {
 	Domain   string `json:"domain"`
@@ -98,6 +105,12 @@ type PortUpdate struct {
 	ServerPort uint `json:"serverPort" validate:"required,number,max=65535,min=1"`
 }
 
+type PageSnapshot struct {
+	PageInfo
+	Info    string `json:"info"`
+	OrderBy string `json:"orderBy" validate:"required,oneof=name created_at"`
+	Order   string `json:"order" validate:"required,oneof=null ascending descending"`
+}
 type SnapshotStatus struct {
 	Panel      string `json:"panel"`
 	PanelInfo  string `json:"panelInfo"`
@@ -141,9 +154,8 @@ type SnapshotInfo struct {
 	DefaultDownload string    `json:"defaultDownload"`
 	Status          string    `json:"status"`
 	Message         string    `json:"message"`
-	CreatedAt       time.Time `json:"createdAt"`
+	CreatedAt       time.Time `json:"created_at"`
 	Version         string    `json:"version"`
-	Size            int64     `json:"size"`
 
 	InterruptStep    string `json:"interruptStep"`
 	RecoverStatus    string `json:"recoverStatus"`
@@ -152,6 +164,12 @@ type SnapshotInfo struct {
 	RollbackStatus   string `json:"rollbackStatus"`
 	RollbackMessage  string `json:"rollbackMessage"`
 	LastRollbackedAt string `json:"lastRollbackedAt"`
+}
+
+type SnapshotFile struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+	Size int64  `json:"size"`
 }
 
 type UpgradeInfo struct {
@@ -217,4 +235,11 @@ type XpackHideMenu struct {
 	Title    string          `json:"title"`
 	Path     string          `json:"path,omitempty"`
 	Children []XpackHideMenu `json:"children,omitempty"`
+}
+
+type ApiInterfaceConfig struct {
+	ApiInterfaceStatus string `json:"apiInterfaceStatus"`
+	ApiKey             string `json:"apiKey"`
+	IpWhiteList        string `json:"ipWhiteList"`
+	ApiKeyValidityTime string `json:"apiKeyValidityTime"`
 }

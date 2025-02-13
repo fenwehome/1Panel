@@ -82,6 +82,9 @@ import { Backup } from '@/api/interface/backup';
 import DrawerHeader from '@/components/drawer-header/index.vue';
 import { addBackup, editBackup } from '@/api/modules/setting';
 import { MsgSuccess } from '@/utils/message';
+import { GlobalStore } from '@/store';
+
+const globalStore = GlobalStore();
 
 const loading = ref(false);
 type FormInstance = InstanceType<typeof ElForm>;
@@ -111,7 +114,8 @@ const handleClose = () => {
 };
 
 const toDoc = () => {
-    window.open('https://1panel.cn/docs/user_manual/settings/#webdav-alist', '_blank', 'noopener,noreferrer');
+    const uri = globalStore.isIntl ? '#webdav-with-alist' : '#34-webdav-alist';
+    window.open(globalStore.docsUrl + '/user_manual/settings/' + uri, '_blank', 'noopener,noreferrer');
 };
 
 const onSubmit = async (formEl: FormInstance | undefined) => {

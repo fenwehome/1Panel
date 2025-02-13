@@ -6,10 +6,10 @@
             <span>{{ $t('container.startIn') }}</span>
         </el-card>
 
-        <LayoutContent :title="$t('container.image')" :class="{ mask: dockerStatus != 'Running' }">
+        <LayoutContent :title="$t('container.image', 2)" :class="{ mask: dockerStatus != 'Running' }">
             <template #toolbar>
-                <el-row>
-                    <el-col :span="16">
+                <div class="flex justify-between gap-2 flex-wrap sm:flex-row">
+                    <div class="flex flex-wrap gap-3">
                         <el-button type="primary" plain @click="onOpenPull">
                             {{ $t('container.imagePull') }}
                         </el-button>
@@ -25,12 +25,12 @@
                         <el-button type="primary" plain @click="onOpenPrune()">
                             {{ $t('container.imagePrune') }}
                         </el-button>
-                    </el-col>
-                    <el-col :span="8">
+                    </div>
+                    <div class="flex flex-wrap gap-3">
                         <TableSetting @search="search()" />
                         <TableSearch @search="search()" v-model:searchName="searchName" />
-                    </el-col>
-                </el-row>
+                    </div>
+                </div>
             </template>
             <template #main>
                 <ComplexTable :pagination-config="paginationConfig" :data="data" @search="search">

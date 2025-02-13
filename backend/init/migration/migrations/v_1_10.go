@@ -288,3 +288,95 @@ var AddClamStatus = &gormigrate.Migration{
 		return nil
 	},
 }
+
+var AddAlertMenu = &gormigrate.Migration{
+	ID: "20240706-update-xpack-hide-menu",
+	Migrate: func(tx *gorm.DB) error {
+		var (
+			setting model.Setting
+			menu    dto.XpackHideMenu
+		)
+		tx.Model(&model.Setting{}).Where("key", "XpackHideMenu").First(&setting)
+		if err := json.Unmarshal([]byte(setting.Value), &menu); err != nil {
+			return err
+		}
+		menu.Children = append(menu.Children, dto.XpackHideMenu{
+			ID:      "7",
+			Title:   "xpack.alert.alert",
+			Path:    "/xpack/alert/dashboard",
+			Label:   "XAlertDashboard",
+			IsCheck: true,
+		})
+		data, err := json.Marshal(menu)
+		if err != nil {
+			return err
+		}
+		return tx.Model(&model.Setting{}).Where("key", "XpackHideMenu").Updates(map[string]interface{}{"value": string(data)}).Error
+	},
+}
+
+var AddComposeColumn = &gormigrate.Migration{
+	ID: "20240906-add-compose-command",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.AutoMigrate(&model.Compose{}); err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var AddAutoRestart = &gormigrate.Migration{
+	ID: "20241021-add-auto-restart",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.Create(&model.Setting{Key: "AutoRestart", Value: "enable"}).Error; err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var AddApiInterfaceConfig = &gormigrate.Migration{
+	ID: "202411-add-api-interface-config",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.Create(&model.Setting{Key: "ApiInterfaceStatus", Value: "disable"}).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&model.Setting{Key: "ApiKey", Value: ""}).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&model.Setting{Key: "IpWhiteList", Value: ""}).Error; err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var AddApiKeyValidityTime = &gormigrate.Migration{
+	ID: "20241226-add-api-key-validity-time",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.Create(&model.Setting{Key: "ApiKeyValidityTime", Value: "120"}).Error; err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var UpdateAppTag = &gormigrate.Migration{
+	ID: "20250114-update-app-tag",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.AutoMigrate(&model.Tag{}); err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var UpdateApp = &gormigrate.Migration{
+	ID: "20250213-update-app",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.AutoMigrate(&model.App{}); err != nil {
+			return err
+		}
+		return nil
+	},
+}

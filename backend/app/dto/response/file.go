@@ -2,6 +2,7 @@ package response
 
 import (
 	"github.com/1Panel-dev/1Panel/backend/utils/files"
+	"time"
 )
 
 type FileInfo struct {
@@ -36,12 +37,20 @@ type FileWgetRes struct {
 }
 
 type FileLineContent struct {
-	Content string `json:"content"`
-	End     bool   `json:"end"`
-	Path    string `json:"path"`
-	Total   int    `json:"total"`
+	Content string   `json:"content"`
+	End     bool     `json:"end"`
+	Path    string   `json:"path"`
+	Total   int      `json:"total"`
+	Lines   []string `json:"lines"`
 }
 
 type FileExist struct {
 	Exist bool `json:"exist"`
+}
+
+type ExistFileInfo struct {
+	Name    string    `json:"name"`
+	Path    string    `json:"path"`
+	Size    float64   `json:"size"`
+	ModTime time.Time `json:"modTime"`
 }

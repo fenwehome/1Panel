@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/1Panel-dev/1Panel/backend/app/dto"
 	"github.com/1Panel-dev/1Panel/backend/app/model"
 	"github.com/1Panel-dev/1Panel/backend/app/repo"
 	"github.com/1Panel-dev/1Panel/backend/constant"
@@ -14,6 +15,7 @@ import (
 	"github.com/1Panel-dev/1Panel/backend/utils/cmd"
 	"github.com/1Panel-dev/1Panel/backend/utils/common"
 	"github.com/1Panel-dev/1Panel/backend/utils/encrypt"
+	"github.com/1Panel-dev/1Panel/backend/utils/xpack"
 )
 
 func Init() {
@@ -57,6 +59,29 @@ func Init() {
 	}
 	if err := settingRepo.Update("SystemStatus", "Free"); err != nil {
 		global.LOG.Fatalf("init service before start failed, err: %v", err)
+	}
+
+	apiInterfaceStatusSetting, err := settingRepo.Get(settingRepo.WithByKey("ApiInterfaceStatus"))
+	if err != nil {
+		global.LOG.Errorf("load service api interface from setting failed, err: %v", err)
+	}
+	global.CONF.System.ApiInterfaceStatus = apiInterfaceStatusSetting.Value
+	if apiInterfaceStatusSetting.Value == "enable" {
+		apiKeySetting, err := settingRepo.Get(settingRepo.WithByKey("ApiKey"))
+		if err != nil {
+			global.LOG.Errorf("load service api key from setting failed, err: %v", err)
+		}
+		global.CONF.System.ApiKey = apiKeySetting.Value
+		ipWhiteListSetting, err := settingRepo.Get(settingRepo.WithByKey("IpWhiteList"))
+		if err != nil {
+			global.LOG.Errorf("load service ip white list from setting failed, err: %v", err)
+		}
+		global.CONF.System.IpWhiteList = ipWhiteListSetting.Value
+		apiKeyValidityTimeSetting, err := settingRepo.Get(settingRepo.WithByKey("ApiKeyValidityTime"))
+		if err != nil {
+			global.LOG.Errorf("load service api key validity time from setting failed, err: %v", err)
+		}
+		global.CONF.System.ApiKeyValidityTime = apiKeyValidityTimeSetting.Value
 	}
 
 	handleUserInfo(global.CONF.System.ChangeUserInfo, settingRepo)
@@ -126,11 +151,24 @@ func handleSnapStatus() {
 }
 
 func handleCronjobStatus() {
-	_ = global.DB.Model(&model.JobRecords{}).Where("status = ?", constant.StatusWaiting).
-		Updates(map[string]interface{}{
-			"status":  constant.StatusFailed,
-			"message": "the task was interrupted due to the restart of the 1panel service",
-		}).Error
+	var jobRecords []model.JobRecords
+	_ = global.DB.Where("status = ?", constant.StatusWaiting).Find(&jobRecords).Error
+	for _, record := range jobRecords {
+		err := global.DB.Model(&model.JobRecords{}).Where("status = ?", constant.StatusWaiting).
+			Updates(map[string]interface{}{
+				"status":  constant.StatusFailed,
+				"message": "the task was interrupted due to the restart of the 1panel service",
+			}).Error
+
+		if err != nil {
+			global.LOG.Errorf("Failed to update job ID: %v, Error:%v", record.ID, err)
+			continue
+		}
+
+		var cronjob *model.Cronjob
+		_ = global.DB.Where("id = ?", record.CronjobID).First(&cronjob).Error
+		handleCronJobAlert(cronjob)
+	}
 }
 
 func loadLocalDir() {
@@ -208,5 +246,22 @@ func initDir() {
 			global.LOG.Errorf("mkdir %s failed, err: %v", composePath, err)
 			return
 		}
+	}
+}
+
+func handleCronJobAlert(cronjob *model.Cronjob) {
+	if cronjob.Type == "snapshot" {
+		return
+	}
+	pushAlert := dto.PushAlert{
+		TaskName:  cronjob.Name,
+		AlertType: cronjob.Type,
+		EntryID:   cronjob.ID,
+		Param:     cronjob.Type,
+	}
+	err := xpack.PushAlert(pushAlert)
+	if err != nil {
+		global.LOG.Errorf("cronjob alert push failed, err: %v", err)
+		return
 	}
 }

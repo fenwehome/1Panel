@@ -6,10 +6,10 @@
             <span>{{ $t('container.startIn') }}</span>
         </el-card>
 
-        <LayoutContent :title="$t('container.network')" :class="{ mask: dockerStatus != 'Running' }">
+        <LayoutContent :title="$t('container.network', 2)" :class="{ mask: dockerStatus != 'Running' }">
             <template #toolbar>
-                <el-row>
-                    <el-col :span="16">
+                <div class="flex justify-between gap-2 flex-wrap sm:flex-row">
+                    <div class="flex flex-wrap gap-3">
                         <el-button type="primary" @click="onCreate()">
                             {{ $t('container.createNetwork') }}
                         </el-button>
@@ -19,12 +19,12 @@
                         <el-button :disabled="selects.length === 0" @click="batchDelete(null)">
                             {{ $t('commons.button.delete') }}
                         </el-button>
-                    </el-col>
-                    <el-col :span="8">
+                    </div>
+                    <div class="flex flex-wrap gap-3">
                         <TableSetting @search="search()" />
                         <TableSearch @search="search()" v-model:searchName="searchName" />
-                    </el-col>
-                </el-row>
+                    </div>
+                </div>
             </template>
             <template #main>
                 <ComplexTable
@@ -198,20 +198,29 @@ const search = async () => {
 
 const batchDelete = async (row: Container.NetworkInfo | null) => {
     let names: Array<string> = [];
+    let hasPanelNetwork;
     if (row === null) {
         selects.value.forEach((item: Container.NetworkInfo) => {
+            if (item.name === '1panel-network') {
+                hasPanelNetwork = true;
+            }
             names.push(item.name);
         });
     } else {
+        if (row.name === '1panel-network') {
+            hasPanelNetwork = true;
+        }
         names.push(row.name);
     }
     opRef.value.acceptParams({
         title: i18n.global.t('commons.button.delete'),
         names: names,
-        msg: i18n.global.t('commons.msg.operatorHelper', [
-            i18n.global.t('container.network'),
-            i18n.global.t('commons.button.delete'),
-        ]),
+        msg: hasPanelNetwork
+            ? i18n.global.t('container.networkHelper')
+            : i18n.global.t('commons.msg.operatorHelper', [
+                  i18n.global.t('container.network'),
+                  i18n.global.t('commons.button.delete'),
+              ]),
         api: deleteNetwork,
         params: { names: names },
     });
